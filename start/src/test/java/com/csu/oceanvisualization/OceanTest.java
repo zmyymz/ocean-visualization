@@ -1,13 +1,20 @@
 package com.csu.oceanvisualization;
 
+import com.csu.oceanvisualization.utils.DateUtils;
+import com.csu.oceanvisualization.utils.GDALUtils;
 import com.google.common.collect.ImmutableList;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
+import org.junit.platform.commons.util.StringUtils;
+import ucar.ma2.Array;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
+
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -23,16 +30,37 @@ import java.util.regex.Pattern;
 public class OceanTest {
     @Test
     public void test01() throws IOException {
-        // 0° 设置时间
-        String timeStart = "2018-01-01 00:30:00";
-        String timeEnd = "2018-01-01 00:35:00";
         // 1° 设置原始文件路径+转存文件路径
         String filePath = "D:/OceanVisualization/data/SSH_202104.nc";
-        String savePath = "/Users/caowei/workspace/test.nc";
+        // String savePath = "/Users/caowei/workspace/test.nc";
         // 2° 读取文件
+        // NetcdfFile netcdfFile = NetcdfFiles.open(filePath);
         NetcdfFile ncFile = NetcdfFile.open(filePath, null);
-        // 3° 设置时间变量
+
+        // 获取所有的变量名
+        ImmutableList<Variable> variablesList = ncFile.getVariables();
+        ImmutableList<Variable> variablesShortNameList;
+        ArrayList<String> variablesNameList = new ArrayList<>();
+        for (Variable variable : variablesList) {
+            String shortName = variable.getShortName();
+            // System.out.println(shortName);
+            if (shortName.equals("lat") || shortName.equals("lon") || shortName.equals("time"))
+                continue;
+            String variableTempName = shortName;
+            variablesNameList.add(shortName);
+        }
+
+        // 设置时间变量
         Variable timeObject = ncFile.findVariable("time");
+        // 读取真实时间值 59310.0 59311.0 59312.0 59313.0 59314.0
+        Array read = timeObject.read();
+        long timeSize = read.getSize();
+        String[] period = read.toString().split(" ");
+        ArrayList<Integer> timeList = new ArrayList<>();
+        for (String s : period) {
+            // [59310, 59311, 59312, 59313, 59314]
+            timeList.add(Double.valueOf(s).intValue());
+        }
         String timeAt = timeObject.getUnitsString();
         String regex = "\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{1}.\\d{1}";
         Pattern p = Pattern.compile(regex);
@@ -40,117 +68,63 @@ public class OceanTest {
         if (matcher.find()) {
             timeAt = matcher.group(0);
         }
-        String curDate = timeAt.split(" ")[0]; // 1858-11-17
-        System.out.println(timeAt);
+        // timeAt 1858-11-17 00:00:0.0
+        String[] timeArray = timeAt.split(" ");
+        // 日期: 1858-11-17
+        String curDate = timeArray[0];
+        // 时间: 00:00:0.0
+        String curTime = timeArray[1];
         System.out.println(curDate);
+        System.out.println(curTime);
 
-        Variable ssh_pred = ncFile.findVariable("SSH_pred");
-        System.out.println(ssh_pred.getElementSize());
-        Attribute ssh_pred1 = ncFile.findAttribute("SSH_pred");
-        System.out.println(ssh_pred1);
-    }
-
-
-    /**
-     * 给计算定日期以及天数(小时)后的日期
-     *
-     * @param sDate
-     * @param iDate
-     * @param iCal
-     * @param sStr
-     * @return
-     */
-    public String getNextDate(String sDate, int iDate, int iCal, String sStr) {
-        String sNextDate = "";
-        Calendar calendar = Calendar.getInstance();
-        SimpleDateFormat formatter = new SimpleDateFormat(sStr);
-        Date date = null;
-        try {
-            date = formatter.parse(sDate);
-        } catch (ParseException e) {
-            e.printStackTrace();
+        ArrayList<String> timestampList = new ArrayList<>();
+        for (Integer time : timeList) {
+            String nextDate = DateUtils.getNextDate(timeAt, time, Calendar.DATE, "yyyy-MM-dd HH:mm:ss");
+            long stringToDate = DateUtils.getStringToDate(nextDate);
+            timestampList.add(String.valueOf(stringToDate));
         }
-        calendar.setTime(date);
-        calendar.add(iCal, iDate);
-        sNextDate = formatter.format(calendar.getTime());
-        return sNextDate;
-    }
 
-
-    public static int daysOfTwo(Date fDate, Date oDate) {
-
-        Calendar aCalendar = Calendar.getInstance();
-
-        aCalendar.setTime(fDate);
-
-        int day1 = aCalendar.get(Calendar.DAY_OF_YEAR);
-
-        aCalendar.setTime(oDate);
-
-        int day2 = aCalendar.get(Calendar.DAY_OF_YEAR);
-
-        return day2 - day1;
-
-    }
-
-    /**
-     * 将字符串转为时间戳
-     */
-    public static long getStringToDate(String time) {
-        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date date = new Date();
-        try {
-            date = sf.parse(time);
-        } catch (ParseException e) {
-            e.printStackTrace();
+        for (int i = 0; i < timeSize; i++) {
+            for (String variable : variablesNameList) {
+                String commandStr = "gdal_translate -projwin_srs epsg:4326 -sds -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + variable + "_" + timestampList.get(i) + ".tif";
+                System.out.println(commandStr);
+            }
         }
-        return date.getTime();
     }
 
-    /**
-     * 时间戳转换成字符串
-     */
-    public static String getDateToString(long time) {
-        Date d = new Date(time);
-        SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return sf.format(d);
+
+    @Test
+    public void testgdalTranslate() throws IOException {
+        GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/");
+        // gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/");
+        // System.out.println(getDateToString(88881984000000L));
     }
+
 
     @Test
     public void test03() throws ParseException {
-        List<Integer> timeRangeList = Arrays.asList(1054176, 1054177, 1054178, 1054179, 1054180, 1054181, 1054182,
-                1054183, 1054184, 1054185, 1054186, 1054187, 1054188, 1054189, 1054190,
-                1054191, 1054192, 1054193, 1054194, 1054195, 1054196, 1054197, 1054198,
-                1054199, 1054200, 1054201, 1054202, 1054203, 1054204, 1054205, 1054206,
-                1054207, 1054208, 1054209, 1054210, 1054211, 1054212, 1054213, 1054214,
-                1054215, 1054216, 1054217, 1054218, 1054219, 1054220, 1054221, 1054222,
-                1054223, 1054224, 1054225, 1054226, 1054227, 1054228, 1054229, 1054230,
-                1054231, 1054232, 1054233, 1054234, 1054235, 1054236, 1054237, 1054238,
-                1054239, 1054240, 1054241, 1054242, 1054243, 1054244, 1054245, 1054246,
-                1054247, 1054248, 1054249, 1054250, 1054251, 1054252, 1054253, 1054254,
-                1054255, 1054256, 1054257, 1054258, 1054259, 1054260, 1054261, 1054262,
-                1054263, 1054264, 1054265, 1054266, 1054267, 1054268, 1054269, 1054270,
-                1054271, 1054272, 1054273, 1054274, 1054275, 1054276, 1054277, 1054278,
-                1054279, 1054280, 1054281, 1054282, 1054283, 1054284, 1054285, 1054286,
-                1054287, 1054288, 1054289, 1054290, 1054291, 1054292, 1054293, 1054294,
-                1054295);
+        // wave_direction时间测试
+        List<Integer> timeRangeList = Arrays.asList(1054176, 1054177, 1054178, 1054179, 1054180, 1054181, 1054182);
         ArrayList<String> timeResultList = Lists.newArrayList();
-        HashSet<String> set = new HashSet<>();
-
-
+        // HashSet<String> set = new HashSet<>();
         for (Integer time : timeRangeList) {
-            String nextDate = getNextDate("1900-01-01", time, Calendar.HOUR_OF_DAY, "yyyy-MM-dd");
+            String nextDate = DateUtils.getNextDate("1900-01-01", time, Calendar.HOUR_OF_DAY, "yyyy-MM-dd");
             timeResultList.add(nextDate);
-            set.add(nextDate);
+            // set.add(nextDate);
         }
         System.out.println(timeResultList);
-        System.out.println(set);
+        // System.out.println(set);
 
 
-        System.out.println(getStringToDate("1900-01-01 00:00:0.0"));
+        // 台风数据测试
+        // String nextDate = getNextDate("1900-01-01 00:00:0.0", 692520, Calendar.HOUR_OF_DAY, "yyyy-MM-dd HH:mm:ss");
+        // System.out.println(nextDate);
 
-        String dateToString = getDateToString(-2209017600000L);
-        System.out.println(dateToString);
+
+        // System.out.println(getStringToDate("1900-01-01 00:00:0.0"));
+        //
+        // String dateToString = getDateToString(-2209017600000L);
+        // System.out.println(dateToString);
 
 
         // wave_direction
@@ -177,6 +151,55 @@ public class OceanTest {
         // Date d2 = simpleDateFormat.parse(str2);
         // int day = daysOfTwo(d1, d2);
         // System.out.println(day);
+    }
+
+    /**
+     * 时间互转测试
+     */
+    @Test
+    public void testTimeStamps(){
+        System.out.println(DateUtils.getDateToString(1586016000000L));
+    }
+
+    /**
+     * 执行简单cmd命令
+     * @param command
+     */
+    public void executeGdalTranslate(String command) {
+        BufferedReader br = null;
+        try {
+            // Process p = Runtime.getRuntime().exec(command);
+            // Process p = new ProcessBuilder(command).start();
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectErrorStream(true);
+            Process p = pb.start();
+            br = new BufferedReader(new InputStreamReader(p.getInputStream(), "GB2312"));
+            String line = null;
+            StringBuilder sb = new StringBuilder();
+            while ((line = br.readLine()) != null) {
+                sb.append(line + "\n");
+            }
+            System.out.println(sb.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 测试简单命令行
+     */
+    @Test
+    public void testCommand() {
+        // 拼接gdal命令
+        // String commandStr = "ping www.baidu.com";
+        String commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -b 2 NETCDF:\"D:/SWH.nc\":SWH_Real D:/SWH_22222_Real.tif";
+        executeGdalTranslate(commandStr);
+    }
+
+
+    @Test
+    public void testCopyFile() {
+
     }
 
 }
