@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -157,12 +158,13 @@ public class OceanTest {
      * 时间互转测试
      */
     @Test
-    public void testTimeStamps(){
+    public void testTimeStamps() {
         System.out.println(DateUtils.getDateToString(1586016000000L));
     }
 
     /**
      * 执行简单cmd命令
+     *
      * @param command
      */
     public void executeGdalTranslate(String command) {
@@ -199,7 +201,11 @@ public class OceanTest {
 
     @Test
     public void testCopyFile() {
+        ThreadLocalRandom t = ThreadLocalRandom.current();
 
+        System.out.println(t.nextInt(50));//随机生成0~50的随机数，不包括50
+
+        System.out.println(t.nextInt(30, 50));//随机生成30~50的随机数，不包括50
     }
 
 }
