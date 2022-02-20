@@ -1,11 +1,14 @@
 package com.csu.oceanvisualization.utils;
 
 import com.google.common.collect.ImmutableList;
+import lombok.extern.slf4j.Slf4j;
 import ucar.ma2.Array;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 import org.junit.platform.commons.util.StringUtils;
+
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -18,6 +21,7 @@ import java.util.regex.Pattern;
  * @Package com.csu.oceanvisualization.utils
  * @date 2022/2/18 14:01
  */
+@Slf4j
 public class GDALUtils {
     // swh.nc -> .tif
     public static void gdalTranslate(String inputFilePath, String outputFilePath) throws IOException {
@@ -87,10 +91,17 @@ public class GDALUtils {
             timestampList.add(String.valueOf(stringToDate));
         }
 
+
+        //如果文件夹不存在则创建
+        File file = new File(outputFilePath);
+        if (!file.exists() && !file.isDirectory()) {
+            file.mkdir();
+        }
         for (int i = 0; i < timeSize; i++) {
             for (String variable : variablesNameList) {
-                String commandStr = "gdal_translate -projwin_srs epsg:4326 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
-                System.out.println(commandStr);
+                String commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
+                CMDUtils.executeCMD(commandStr);
+                // System.out.println(commandStr);
             }
         }
     }

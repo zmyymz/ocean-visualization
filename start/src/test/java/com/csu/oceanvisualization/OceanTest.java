@@ -94,12 +94,7 @@ public class OceanTest {
     }
 
 
-    @Test
-    public void testgdalTranslate() throws IOException {
-        GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/");
-        // gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/");
-        // System.out.println(getDateToString(88881984000000L));
-    }
+
 
 
     @Test
@@ -167,24 +162,33 @@ public class OceanTest {
      *
      * @param command
      */
-    public void executeGdalTranslate(String command) {
+    public String executeCMD(String command) {
         BufferedReader br = null;
         try {
-            // Process p = Runtime.getRuntime().exec(command);
+            Process p = Runtime.getRuntime().exec(command);
             // Process p = new ProcessBuilder(command).start();
-            ProcessBuilder pb = new ProcessBuilder(command);
-            pb.redirectErrorStream(true);
-            Process p = pb.start();
+            // ProcessBuilder pb = new ProcessBuilder(command);
+            // pb.redirectErrorStream(true);
+            // Process p = pb.start();
             br = new BufferedReader(new InputStreamReader(p.getInputStream(), "GB2312"));
             String line = null;
             StringBuilder sb = new StringBuilder();
             while ((line = br.readLine()) != null) {
                 sb.append(line + "\n");
             }
-            System.out.println(sb.toString());
+            // System.out.println(sb.toString());
+            return sb.toString();
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return "";
+    }
+
+    @Test
+    public void testgdalTranslate() throws IOException {
+        GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/test/");
+        // gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/");
+        // System.out.println(getDateToString(88881984000000L));
     }
 
     /**
@@ -195,7 +199,25 @@ public class OceanTest {
         // 拼接gdal命令
         // String commandStr = "ping www.baidu.com";
         String commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -b 2 NETCDF:\"D:/SWH.nc\":SWH_Real D:/SWH_22222_Real.tif";
-        executeGdalTranslate(commandStr);
+        executeCMD(commandStr);
+    }
+
+    @Test
+    public void testPythonCommand() {
+        // 拼接python命令
+        String property = System.getProperties().getProperty("os.name");
+        if (property.toLowerCase().startsWith("win")){
+            // 执行 windows cmd
+            String commandStr = "cmd /c python D:\\Java\\JavaEE\\IdeaProjects\\ocean-visualization\\ocean-visualization-service\\src\\main\\java\\com\\csu\\oceanvisualization\\scripts\\txt2geojson.py \"D:/OceanVisualization/data/typhoon_data/WP_solo/tp_seq1.txt\" D:/out.geojson";
+            String result = executeCMD(commandStr);
+            System.out.println(result);
+        }else{
+            // 执行 linux cmd
+            System.out.println("linux");
+        }
+
+        // String commandStr = "cmd /c python D:\\Java\\JavaEE\\IdeaProjects\\ocean-visualization\\ocean-visualization-service\\src\\main\\java\\com\\csu\\oceanvisualization\\scripts\\txt2geojson.py D:/a.txt D:/out.geojson";
+        // executeCMD(commandStr);
     }
 
 
