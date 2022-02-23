@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.concurrent.ExecutionException;
+
 /**
  * @author zmy
  * @version V1.0
@@ -16,14 +18,14 @@ import org.springframework.web.bind.annotation.RestController;
  * @date 2022/2/19 15:36
  */
 @RestController
-@RequestMapping("/ocean/typhoon")
+@RequestMapping("/typhoon")
 @CrossOrigin
 public class GeoInfoController {
     @Autowired
     private GeoJsonDataService geoJsonDataService;
 
     @GetMapping("getGeojsonData")
-    public Result getGeoJsonData() {
+    public Result getGeoJsonData() throws ExecutionException {
         // String geoJsonData;
         // try {
         //     geoJsonData = geoJsonDataService.getGeoJsonData();

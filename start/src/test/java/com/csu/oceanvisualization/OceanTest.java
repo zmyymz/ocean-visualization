@@ -1,22 +1,23 @@
 package com.csu.oceanvisualization;
 
+import com.csu.oceanvisualization.entity.Feature;
+import com.csu.oceanvisualization.entity.GeoJsonFeature;
+import com.csu.oceanvisualization.entity.Geometry;
+import com.csu.oceanvisualization.entity.TyphoonProperty;
+import com.csu.oceanvisualization.utils.CMDUtils;
 import com.csu.oceanvisualization.utils.DateUtils;
 import com.csu.oceanvisualization.utils.GDALUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import org.assertj.core.util.Lists;
 import org.junit.jupiter.api.Test;
-import org.junit.platform.commons.util.StringUtils;
 import ucar.ma2.Array;
-import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
 
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
@@ -92,9 +93,6 @@ public class OceanTest {
             }
         }
     }
-
-
-
 
 
     @Test
@@ -173,6 +171,8 @@ public class OceanTest {
             br = new BufferedReader(new InputStreamReader(p.getInputStream(), "GB2312"));
             String line = null;
             StringBuilder sb = new StringBuilder();
+            String s = br.readLine();
+            // System.out.println(s);
             while ((line = br.readLine()) != null) {
                 sb.append(line + "\n");
             }
@@ -199,25 +199,34 @@ public class OceanTest {
         // 拼接gdal命令
         // String commandStr = "ping www.baidu.com";
         String commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -b 2 NETCDF:\"D:/SWH.nc\":SWH_Real D:/SWH_22222_Real.tif";
-        executeCMD(commandStr);
+        String s = executeCMD(commandStr);
+        System.out.println(s);
     }
 
     @Test
     public void testPythonCommand() {
         // 拼接python命令
-        String property = System.getProperties().getProperty("os.name");
-        if (property.toLowerCase().startsWith("win")){
-            // 执行 windows cmd
-            String commandStr = "cmd /c python D:\\Java\\JavaEE\\IdeaProjects\\ocean-visualization\\ocean-visualization-service\\src\\main\\java\\com\\csu\\oceanvisualization\\scripts\\txt2geojson.py \"D:/OceanVisualization/data/typhoon_data/WP_solo/tp_seq1.txt\" D:/out.geojson";
-            String result = executeCMD(commandStr);
-            System.out.println(result);
-        }else{
-            // 执行 linux cmd
-            System.out.println("linux");
-        }
+        // String property = System.getProperties().getProperty("os.name");
+        // if (property.toLowerCase().startsWith("win")){
+        //     // 执行 windows cmd
+        //     // String commandStr = "cmd /c ping www.baidu.com";
+        //     // "I:/software/Anaconda3/python.exe"
+        //     String commandStr = "cmd /c I:/software/Anaconda3/python.exe D:\\Java\\JavaEE\\IdeaProjects\\ocean-visualization\\ocean-visualization-service\\src\\main\\java\\com\\csu\\oceanvisualization\\scripts\\txt2geojson.py D:/OceanVisualization/data/typhoon_data/WP_solo/tp_seq1.txt D:/out.geojson";
+        //     String result = executeCMD(commandStr);
+        //     System.out.println(result);
+        // }else{
+        //     // 执行 linux cmd
+        //     System.out.println("linux");
+        // }
 
-        // String commandStr = "cmd /c python D:\\Java\\JavaEE\\IdeaProjects\\ocean-visualization\\ocean-visualization-service\\src\\main\\java\\com\\csu\\oceanvisualization\\scripts\\txt2geojson.py D:/a.txt D:/out.geojson";
-        // executeCMD(commandStr);
+        String commandStr = "cmd /c python D:/Java/JavaEE/IdeaProjects/ocean-visualization/ocean-visualization-service/src/main/java/com/csu/oceanvisualization/scripts/txt2geojson.py D:/OceanVisualization/data/typhoon_data/WP_solo/tp_seq1.txt D:/out.geojson";
+        String s = CMDUtils.executeCMD(commandStr);
+        System.out.println(s);
+
+        // String commandStr = "cmd /c python.exe D:/Java/JavaEE/IdeaProjects/ocean-visualization/ocean-visualization-service/src/main/java/com/csu/oceanvisualization/scripts/hello.py";
+        // String s = CMDUtils.executeCMD(commandStr);
+        // System.out.println(s);
+
     }
 
 
@@ -228,6 +237,57 @@ public class OceanTest {
         System.out.println(t.nextInt(50));//随机生成0~50的随机数，不包括50
 
         System.out.println(t.nextInt(30, 50));//随机生成30~50的随机数，不包括50
+    }
+
+    @Test
+    public void pasreCSVtoGeoJson() throws IOException {
+        String csvFilePath = "D:\\OceanVisualization\\data\\typhoon_data\\WP_solo\\tp_seq1.txt";
+        ArrayList<Feature> featureArrayList = new ArrayList<>();
+
+        try (BufferedReader in = new BufferedReader(new FileReader(csvFilePath));) {
+            // processing code here
+            String s = null;
+            StringBuilder sb = new StringBuilder();
+            int id = 0;
+            while ((s = in.readLine()) != null) {
+                String[] line = s.split(" ");
+                Double longitude = Double.valueOf(line[2]);
+                Double latitude = Double.valueOf(line[3]);
+                Integer minPressure = Integer.valueOf(line[4]);
+                Integer maxWindSpeed = Integer.valueOf(line[5]);
+                Geometry geometry = new Geometry();
+                geometry.setType("Point");
+                geometry.setCoordinates(Arrays.asList(longitude, latitude));
+
+
+                Feature feature = new Feature();
+                feature.setId(String.valueOf(id));
+                id++;
+                feature.setType("Feature");
+                feature.setGeometry(geometry);
+
+
+                TyphoonProperty properties = new TyphoonProperty();
+                properties.setDate(line[0]);
+                properties.setLatitude(latitude);
+                properties.setLongitude(longitude);
+                properties.setMaxWindSpeed(maxWindSpeed);
+                properties.setMinPressure(minPressure);
+                properties.setTime(line[1]);
+
+
+                feature.setProperties(properties);
+                featureArrayList.add(feature);
+            }
+        }
+        GeoJsonFeature geoJsonFeature = new GeoJsonFeature();
+        geoJsonFeature.setType("FeatureCollection");
+        geoJsonFeature.setFeatureList(featureArrayList);
+        // System.out.println(geoJsonFeature);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String s = objectMapper.writeValueAsString(geoJsonFeature);
+        System.out.println(s);
     }
 
 }
