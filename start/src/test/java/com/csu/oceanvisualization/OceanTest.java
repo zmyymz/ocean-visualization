@@ -10,6 +10,7 @@ import com.csu.oceanvisualization.utils.GDALUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableList;
 import org.assertj.core.util.Lists;
+import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 import ucar.ma2.Array;
 import ucar.nc2.NetcdfFile;
@@ -17,6 +18,9 @@ import ucar.nc2.Variable;
 
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -152,7 +156,7 @@ public class OceanTest {
      */
     @Test
     public void testTimeStamps() {
-        System.out.println(DateUtils.getDateToString(1586016000000L));
+        System.out.println(DateUtils.getDateToString(1586059200000L));
     }
 
     /**
@@ -186,7 +190,10 @@ public class OceanTest {
 
     @Test
     public void testgdalTranslate() throws IOException {
-        GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/test/");
+        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/test/");
+        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/temp.nc", "D:/temp/");
+        GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
+
         // gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/");
         // System.out.println(getDateToString(88881984000000L));
     }
@@ -288,6 +295,44 @@ public class OceanTest {
         ObjectMapper objectMapper = new ObjectMapper();
         String s = objectMapper.writeValueAsString(geoJsonFeature);
         System.out.println(s);
+    }
+
+    @Test
+    public void uploadNetcdf() throws IOException {
+        //转换为json字符串
+        Map<String, Object> map = new HashMap<String, Object>();
+        Map<String,Object> map1 = new HashMap<String,Object>();
+        Map<String,Object> map2 = new HashMap<String,Object>();
+        map1.put("name","netcdfstore1");
+        map1.put("type","NetCDF");
+        map1.put("enabled","true");
+        map2.put("name","cite");
+        map1.put("workspace",map2);
+        map1.put("__default","false");
+        map1.put("url","file://D://OceanVisualization//data//typhoon_data//WP_solo//data_seq1//tp_1_pl.nc");
+        map.put("coverageStore",map1);
+
+        JSONObject json = new JSONObject(map);
+
+        String username = "admin"; //用户名
+        String password = "geoserver";//密码
+        URL url = new URL("http://localhost:8089/geoserver/rest/workspaces/cite/coveragestores");//访问的geoserver网址
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();//创建连接
+        String author = "Basic " + Base64.getEncoder().encodeToString((username+":"+ password).getBytes());
+        connection.setRequestProperty("Authorization", author);
+        connection.setRequestMethod("POST");
+        connection.setDoOutput(true);
+        connection.setRequestProperty("Content-Type","application/json;charset=UTF-8");
+        connection.connect();
+        //发送
+        OutputStream out = new DataOutputStream(connection.getOutputStream()) ;
+        // 写入请求的字符串
+        System.out.println(json.toString());
+        out.write((json.toString()).getBytes("UTF-8"));
+        out.flush();
+        out.close();
+
+        System.out.println(connection.getResponseCode());
     }
 
 }

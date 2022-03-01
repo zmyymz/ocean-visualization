@@ -70,6 +70,14 @@ public class GDALUtils {
         if (matcher.find()) {
             unitsString = matcher.group(0);
         }
+        // else{
+        //     String regex2 = "\\d{4}-\\d{2}-\\d{2}";
+        //     Pattern p2 = Pattern.compile(regex2);
+        //     Matcher matcher2 = p2.matcher(unitsString);
+        //     if(matcher2.find()){
+        //         unitsString = matcher2.group(0) + " 00:00:0.0";
+        //     }
+        // }
         // unitsString 1858-11-17 00:00:0.0
         String[] timeArray = unitsString.split(" ");
         // 日期: 1858-11-17
@@ -97,10 +105,17 @@ public class GDALUtils {
         if (!file.exists() && !file.isDirectory()) {
             file.mkdir();
         }
+
+        String commandStr;
         for (int i = 0; i < timeSize; i++) {
             for (String variable : variablesNameList) {
-                String commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
-                CMDUtils.executeCMD(commandStr);
+                if (inputFilePath.contains("wave_direction")) {
+                    commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -a_ullr 104.75 -0.25 122.25 25.25 -a_nodata 0 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
+                    CMDUtils.executeCMD(commandStr);
+                } else {
+                    commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
+                    CMDUtils.executeCMD(commandStr);
+                }
                 // System.out.println(commandStr);
             }
         }

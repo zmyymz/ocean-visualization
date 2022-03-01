@@ -14,7 +14,7 @@ public abstract class AbstractOcean {
         // 2.生成两个新的变量
         calculateError();
 
-        // 3.将nc装为tif
+        // 3.将nc转为tif
         gdalTranslate();
 
         // 4. geoserver发布tif图层
