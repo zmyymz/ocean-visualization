@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 @Service("parseByPython")
 public class ParseCSVToGeoJsonByPythonImpl implements ParseCSVToGeoJson {
     @Override
-    public String parse() {
+    public String parse(String fourOceans, String tpSeq) {
         // 拼接python命令
         String property = System.getProperties().getProperty("os.name");
         // 执行 windows cmd

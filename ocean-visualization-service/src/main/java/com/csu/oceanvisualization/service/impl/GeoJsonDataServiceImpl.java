@@ -6,6 +6,7 @@ import com.csu.oceanvisualization.utils.CMDUtils;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -28,11 +29,31 @@ public class GeoJsonDataServiceImpl implements GeoJsonDataService {
     @Autowired
     private Map<String, ParseCSVToGeoJson> parseCSVToGeoJsonMap;
 
+    public static LoadingCache<String, String> cache;
+
+    @SneakyThrows
     @Override
-    public String getGeoJsonData() {
+    public String getGeoJsonData(String fourOceans, String tpSeq) {
         ParseCSVToGeoJson parseBySerialize = parseCSVToGeoJsonMap.get("parseBySerialize");
-        String json = parseBySerialize.parse();
-        return json;
+
+        String geoJsonString = null;
+        if (cache != null) {
+            geoJsonString = cache.get(tpSeq);
+        } else {
+            cache = CacheBuilder.newBuilder()
+                    .recordStats()
+                    .maximumSize(1000)
+                    .expireAfterAccess(10, TimeUnit.DAYS)
+                    .build(new CacheLoader<String, String>() {
+                        @Override
+                        public String load(String tpSeq) throws Exception {
+                            System.out.println("cache 执行了");
+                            return parseBySerialize.parse(fourOceans, tpSeq);
+                        }
+                    });
+            geoJsonString = cache.get(tpSeq);
+        }
+        return geoJsonString;
     }
 
 

@@ -10,5 +10,5 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public interface ParseCSVToGeoJson {
-    public String parse();
+    public String parse(String fourOceans, String tpSeq);
 }

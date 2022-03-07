@@ -7,6 +7,8 @@ import com.csu.oceanvisualization.entity.TyphoonProperty;
 import com.csu.oceanvisualization.service.ParseCSVToGeoJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
+import org.apache.commons.io.FilenameUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
@@ -22,10 +24,17 @@ import java.util.Arrays;
  */
 @Service("parseBySerialize")
 public class ParseCSVToGeoJsonBySerializeImpl implements ParseCSVToGeoJson {
+    @Value("${com.csu.typhoon.serverfile-path}")
+    private String serverTempFilePath;
+
     @SneakyThrows
     @Override
-    public String parse() {
-        String csvFilePath = "D:\\OceanVisualization\\data\\typhoon_data\\WP_solo\\tp_seq1.txt";
+    public String parse(String fourOceans, String tpSeq) {
+        System.out.println("ParseCSVToGeoJson#parse 执行了");
+        String csvFilePath = FilenameUtils.separatorsToSystem(serverTempFilePath + fourOceans.toUpperCase() + "_solo/" + tpSeq.trim() + ".txt");
+        System.out.println(csvFilePath);
+        // String csvFilePath = "D:\\OceanVisualization\\data\\typhoon_data\\WP_solo\\" + tpSeq.trim() + ".txt";
+        // String csvFilePath = "D:\\OceanVisualization\\data\\typhoon_data\\WP_solo\\tp_seq1.txt";
         ArrayList<Feature> featureArrayList = new ArrayList<>();
 
         try (BufferedReader in = new BufferedReader(new FileReader(csvFilePath));) {

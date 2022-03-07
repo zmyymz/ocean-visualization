@@ -4,10 +4,7 @@ import com.csu.oceanvisualization.commonutils.Result;
 import com.csu.oceanvisualization.service.GeoJsonDataService;
 import com.csu.oceanvisualization.servicebase.exceptionhandler.OceanException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.ExecutionException;
 
@@ -24,8 +21,8 @@ public class GeoInfoController {
     @Autowired
     private GeoJsonDataService geoJsonDataService;
 
-    @GetMapping("getGeojsonData")
-    public Result getGeoJsonData() throws ExecutionException {
+    @GetMapping("getGeojsonData/{fourOceans}/{tpSeq}")
+    public Result getGeoJsonData(@PathVariable String fourOceans, @PathVariable String tpSeq) throws ExecutionException {
         // String geoJsonData;
         // try {
         //     geoJsonData = geoJsonDataService.getGeoJsonData();
@@ -33,7 +30,8 @@ public class GeoInfoController {
         //     throw new OceanException(20001, "txt转geojson出现异常");
         // }
 
-        String geoJsonData = geoJsonDataService.getGeoJsonData();
+
+        String geoJsonData = geoJsonDataService.getGeoJsonData(fourOceans, tpSeq);
         return Result.ok().data("geoJsonData", geoJsonData);
     }
 }

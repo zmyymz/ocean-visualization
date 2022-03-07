@@ -6,12 +6,20 @@ import com.csu.oceanvisualization.entity.Geometry;
 import com.csu.oceanvisualization.entity.TyphoonProperty;
 import com.csu.oceanvisualization.utils.CMDUtils;
 import com.csu.oceanvisualization.utils.DateUtils;
+import com.csu.oceanvisualization.utils.FileUtils;
 import com.csu.oceanvisualization.utils.GDALUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
+import lombok.SneakyThrows;
+import org.apache.commons.io.FilenameUtils;
 import org.assertj.core.util.Lists;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.util.StopWatch;
 import ucar.ma2.Array;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
@@ -21,11 +29,19 @@ import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author zmy
@@ -33,6 +49,7 @@ import java.util.regex.Pattern;
  * @Package com.csu.oceanvisualization
  * @date 2022/1/28 14:46
  */
+// @SpringBootTest
 public class OceanTest {
     @Test
     public void test01() throws IOException {
@@ -190,9 +207,9 @@ public class OceanTest {
 
     @Test
     public void testgdalTranslate() throws IOException {
-        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/test/");
+        GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/test/");
         // GDALUtils.gdalTranslate("D:/OceanVisualization/data/temp.nc", "D:/temp/");
-        GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
+        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
 
         // gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/");
         // System.out.println(getDateToString(88881984000000L));
@@ -301,16 +318,16 @@ public class OceanTest {
     public void uploadNetcdf() throws IOException {
         //转换为json字符串
         Map<String, Object> map = new HashMap<String, Object>();
-        Map<String,Object> map1 = new HashMap<String,Object>();
-        Map<String,Object> map2 = new HashMap<String,Object>();
-        map1.put("name","netcdfstore1");
-        map1.put("type","NetCDF");
-        map1.put("enabled","true");
-        map2.put("name","cite");
-        map1.put("workspace",map2);
-        map1.put("__default","false");
-        map1.put("url","file://D://OceanVisualization//data//typhoon_data//WP_solo//data_seq1//tp_1_pl.nc");
-        map.put("coverageStore",map1);
+        Map<String, Object> map1 = new HashMap<String, Object>();
+        Map<String, Object> map2 = new HashMap<String, Object>();
+        map1.put("name", "netcdfstore1");
+        map1.put("type", "NetCDF");
+        map1.put("enabled", "true");
+        map2.put("name", "cite");
+        map1.put("workspace", map2);
+        map1.put("__default", "false");
+        map1.put("url", "file://D://OceanVisualization//data//typhoon_data//WP_solo//data_seq1//tp_1_pl.nc");
+        map.put("coverageStore", map1);
 
         JSONObject json = new JSONObject(map);
 
@@ -318,14 +335,14 @@ public class OceanTest {
         String password = "geoserver";//密码
         URL url = new URL("http://localhost:8089/geoserver/rest/workspaces/cite/coveragestores");//访问的geoserver网址
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();//创建连接
-        String author = "Basic " + Base64.getEncoder().encodeToString((username+":"+ password).getBytes());
+        String author = "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
         connection.setRequestProperty("Authorization", author);
         connection.setRequestMethod("POST");
         connection.setDoOutput(true);
-        connection.setRequestProperty("Content-Type","application/json;charset=UTF-8");
+        connection.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
         connection.connect();
         //发送
-        OutputStream out = new DataOutputStream(connection.getOutputStream()) ;
+        OutputStream out = new DataOutputStream(connection.getOutputStream());
         // 写入请求的字符串
         System.out.println(json.toString());
         out.write((json.toString()).getBytes("UTF-8"));
@@ -333,6 +350,205 @@ public class OceanTest {
         out.close();
 
         System.out.println(connection.getResponseCode());
+    }
+
+
+    @Test
+    public void testAddErrorVariable() {
+        String inputPath = "SWH.nc";
+        String commandStr = "cmd /c python addErrorVariable.py " + inputPath;
+        System.out.println(commandStr);
+        // String s = CMDUtils.executeCMD(commandStr);
+        // System.out.println(s);
+    }
+
+    /**
+     * 遍历目录下的所有文件
+     */
+    @Test
+    public void testDeleteFolder() {
+        // FileUtils.delDir("D:/oceantest/");
+
+        File ncFolder = new File("D:/OceanVisualization/data/");
+        File[] ncFilePath = ncFolder.listFiles();
+        String property = System.getProperties().getProperty("os.name");
+
+        for (File file : ncFilePath) {
+            if (file.isFile()) {
+                if (file.getName().endsWith(".nc")) {
+                    if (property.toLowerCase().startsWith("win")) {
+                        // todo 需要解决脚本路径问题
+                        String commandStr = "cmd /c python addErrorVariable.py " + file;
+                        // CMDUtils.executeCMD(commandStr);
+                        System.out.println(commandStr);
+                    } else {
+                        // 执行 linux cmd
+                        String commandStr = "python addErrorVariable.py " + file;
+                        CMDUtils.executeCMD(commandStr);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 遍历目录文件
+     * @throws IOException
+     */
+    @Test
+    public void testTraverserFile() throws IOException {
+        // 方式一
+        // File ncFolder = new File(serverTempFilePath);
+        // File[] ncFilePath = ncFolder.listFiles();
+        // String property = System.getProperties().getProperty("os.name");
+        //
+        // for (File file : ncFilePath) {
+        //     if (file.isFile()) {
+        //         if (file.getName().endsWith(".nc")) {
+        //             if (property.toLowerCase().startsWith("win")) {
+        //                 // todo 需要解决脚本路径问题
+        //                 String commandStr = "cmd /c python addErrorVariable.py " + file;
+        //                 // CMDUtils.executeCMD(commandStr);
+        //                 System.out.println(commandStr);
+        //             } else {
+        //                 // 执行 linux cmd
+        //                 String commandStr = "python addErrorVariable.py " + file;
+        //                 CMDUtils.executeCMD(commandStr);
+        //             }
+        //         }
+        //     }
+        // }
+
+        // 方式二
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
+        List<File> files = Files.list(Paths.get("D:/OceanVisualization/data/"))
+                .filter(Files::isRegularFile)
+                .filter(path -> path.toString().endsWith(".nc"))
+                .map(Path::toFile)
+                .collect(Collectors.toList());
+        stopWatch.stop();
+        System.out.println(stopWatch.prettyPrint());
+
+
+        String property = System.getProperties().getProperty("os.name");
+
+        files.forEach(new Consumer<File>() {
+            @Override
+            public void accept(File file) {
+                if (property.toLowerCase().startsWith("win")) {
+                    // todo 需要解决脚本路径问题
+                    String commandStr = "cmd /c python addErrorVariable.py " + file;
+                    // CMDUtils.executeCMD(commandStr);
+                    System.out.println(commandStr);
+                } else {
+                    // 执行 linux cmd
+                    String commandStr = "python addErrorVariable.py " + file;
+                    CMDUtils.executeCMD(commandStr);
+                }
+            }
+        });
+    }
+
+    /**
+     * Guava缓存测试
+     * @throws ExecutionException
+     */
+    @Test
+    public void testCache() throws ExecutionException {
+        LoadingCache<String, String> cache = CacheBuilder.newBuilder()
+                .recordStats()
+                .maximumSize(1000)
+                .expireAfterAccess(10, TimeUnit.DAYS)
+                .build(new CacheLoader<String, String>() {
+                    @Override
+                    public String load(String tpSeq) throws Exception {
+                        System.out.println("cache 执行了");
+                        return "AAA";
+                    }
+                });
+
+        String geoJsonString = cache.get("a");
+        System.out.println(geoJsonString);
+
+        String s = cache.get("a");
+        System.out.println(s);
+    }
+
+    /**
+     * 台风序列计数测试
+     */
+    @SneakyThrows
+    @Test
+    public void testCountTyphoon() {
+        ConcurrentHashMap<String, List> map = new ConcurrentHashMap<>();
+        File typhoonFolder = new File("D:\\OceanVisualization\\data\\typhoon_data");
+        File[] typhoonFilePath = typhoonFolder.listFiles();
+        for (File file : typhoonFilePath) {
+            if (file.getName().contains("EP")) {
+                map.put("EP", getTxtFilesCount(file));
+            } else if (file.getName().contains("WP")) {
+                map.put("WP", getTxtFilesCount(file));
+            } else if (file.getName().contains("NA")) {
+                map.put("NA", getTxtFilesCount(file));
+            }
+        }
+        // System.out.println(map);
+        //
+        // File file = new File("D:/user2.json");
+        // if (!file.exists())
+        //     file.createNewFile();
+        // ObjectMapper mapper = new ObjectMapper();
+        // mapper.writeValue(file, map);
+
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        ConcurrentHashMap concurrentHashMap = objectMapper.readValue(new File("D:/user2.json"), ConcurrentHashMap.class);
+        System.out.println(concurrentHashMap);
+
+    }
+
+    public static List<String> getTxtFilesCount(File srcFile) {
+        ArrayList<String> list = new ArrayList<>();
+        int count = 0;
+        // 判断传入的文件是不是为空
+        if (srcFile == null) {
+            throw new NullPointerException();
+        }
+        // 把所有目录、文件放入数组
+        File[] files = srcFile.listFiles();
+        // 遍历数组每一个元素
+        for (File f : files) {
+            // 判断元素是不是文件夹，是文件夹就重复调用此方法（递归）
+            if (f.isDirectory()) {
+                getTxtFilesCount(f);
+            } else {
+                // 判断文件是不是以.txt结尾的文件，并且count++（注意：文件要显示扩展名）
+                if (f.getName().endsWith(".txt")) {
+                    count++;
+                    list.add(f.getName());
+                }
+            }
+        }
+        // 返回.txt文件个数
+        return list;
+    }
+
+    /**
+     * 路径测试
+     */
+    @Test
+    public void testPathTransform(){
+        String path = "D:/aaa" + "/bbb.json";
+        System.out.println(FilenameUtils.separatorsToSystem(path));
+
+        // String scriptPath = "D:\\Java\\JavaEE\\IdeaProjects\\ocean-visualization\\ocean-visualization-service\\src\\main\\java\\com\\csu\\oceanvisualization\\scripts\\addErrorVariable.py";
+        String projectPath = "D:/Java/JavaEE/IdeaProjects/";
+        String scriptPath = "ocean-visualization/ocean-visualization-service/src/main/java/com/csu/oceanvisualization/scripts/addErrorVariable.py";
+        System.out.println(FilenameUtils.separatorsToSystem(projectPath + scriptPath));
+        // System.out.println(FilenameUtils.separatorsToUnix(scriptPath));
+
+
     }
 
 }

@@ -7,6 +7,10 @@ package com.csu.oceanvisualization.service;
  * @date 2022/2/22 13:50
  */
 public abstract class AbstractOcean {
+    private final static String USER_NCFILE_PATH = "";
+
+    private final static String SERVER_NCFILE_PATH = "";
+
     public final void publishOceanLayer(){
         // 1.文件目录处理
         traverseFile();
@@ -19,6 +23,9 @@ public abstract class AbstractOcean {
 
         // 4. geoserver发布tif图层
         publishTifLayer();
+
+        // 5. 清理tif文件目录
+        deleteTifFile();
     }
 
 
@@ -29,6 +36,8 @@ public abstract class AbstractOcean {
     protected abstract void gdalTranslate();
 
     protected abstract void publishTifLayer();
+
+    protected abstract void deleteTifFile();
 
 
 

@@ -69,6 +69,13 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }else{
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                mapper.writeValue(file, map);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 

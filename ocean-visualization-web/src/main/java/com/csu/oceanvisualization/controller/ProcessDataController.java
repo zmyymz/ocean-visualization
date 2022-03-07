@@ -1,6 +1,11 @@
 package com.csu.oceanvisualization.controller;
 
 import com.csu.oceanvisualization.commonutils.Result;
+import com.csu.oceanvisualization.service.AbstractOcean;
+import com.csu.oceanvisualization.service.impl.PublishOceanImpl;
+import com.csu.oceanvisualization.service.impl.PublishTyphoonImpl;
+import org.checkerframework.checker.units.qual.A;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,10 +23,32 @@ import java.util.concurrent.ExecutionException;
 @RequestMapping("/ocean")
 @CrossOrigin
 public class ProcessDataController {
-    @GetMapping("processData")
-    public Result processData() throws ExecutionException {
+    @Autowired
+    private PublishOceanImpl publishOcean;
+
+    @Autowired
+    private PublishTyphoonImpl publishTyphoon;
+
+    @GetMapping("processOceanData")
+    public Result processOceanData() throws ExecutionException {
         // todo 调用AbstractOcean
-        return null;
-        // return Result.ok().data("geoJsonData", geoJsonData);
+        // AbstractOcean publishOcean = new PublishOceanImpl();
+        publishOcean.publishOceanLayer();
+        return Result.ok();
     }
+
+    @GetMapping("processTyphoonData")
+    public Result processTyphoonData() throws ExecutionException {
+        publishTyphoon.publishTyphoonLayer();;
+        return Result.ok();
+    }
+
+
+    // @GetMapping("processTyphoonData/{fouroceans}")
+    // public Result processTyphoonData() throws ExecutionException {
+    //     // todo 调用AbstractOcean
+    //     // AbstractOcean publishOcean = new PublishOceanImpl();
+    //     // publishOcean.publishOceanLayer();
+    //     return Result.ok();
+    // }
 }
