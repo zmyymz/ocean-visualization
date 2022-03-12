@@ -114,23 +114,24 @@ public class GDALUtils {
                     // 执行 windows cmd
                     if (inputFilePath.contains("wave_direction")) {
                         commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -a_ullr 104.75 -0.25 122.25 25.25 -a_nodata 0 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
-                        // CMDUtils.executeCMD(commandStr);
-                        System.out.println(commandStr);
+                        CMDUtils.executeCMD(commandStr);
+                        // System.out.println(commandStr);
 
                     } else {
                         commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
-                        // CMDUtils.executeCMD(commandStr);
-                        System.out.println(commandStr);
+                        CMDUtils.executeCMD(commandStr);
+                        // System.out.println(commandStr);
                     }
                 } else {
                     // 执行 linux cmd
                     if (inputFilePath.contains("wave_direction")) {
-                        commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -a_ullr 104.75 -0.25 122.25 25.25 -a_nodata 0 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
+                        commandStr = "gdal_translate -projwin_srs epsg:4326 -a_ullr 104.75 -0.25 122.25 25.25 -a_nodata 0 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
                         CMDUtils.executeCMD(commandStr);
+                        // System.out.println(commandStr);
                     } else {
-                        commandStr = "cmd /c gdal_translate -projwin_srs epsg:4326 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
-                        // CMDUtils.executeCMD(commandStr);
-                        System.out.println(commandStr);
+                        commandStr = "gdal_translate -projwin_srs epsg:4326 -b " + (i + 1) + " NETCDF:\"" + filePath + "\":" + variable + " " + outputFilePath + variable + "_" + timestampList.get(i) + ".tif";
+                        CMDUtils.executeCMD(commandStr);
+                        // System.out.println(commandStr);
                     }
                 }
 

@@ -36,6 +36,22 @@ public class GeoJsonDataServiceImpl implements GeoJsonDataService {
     public String getGeoJsonData(String fourOceans, String tpSeq) {
         ParseCSVToGeoJson parseBySerialize = parseCSVToGeoJsonMap.get("parseBySerialize");
 
+        // if (cache == null) {
+        //     cache = CacheBuilder.newBuilder()
+        //             .recordStats()
+        //             .maximumSize(1000)
+        //             .expireAfterAccess(10, TimeUnit.DAYS)
+        //             .build(new CacheLoader<String, String>() {
+        //                 @Override
+        //                 public String load(String tpSeq) throws Exception {
+        //                     System.out.println("cache 执行了");
+        //                     return parseBySerialize.parse(fourOceans, tpSeq);
+        //                 }
+        //             });
+        // }
+        // String geoJsonString = cache.get(tpSeq);
+        // return geoJsonString;
+
         String geoJsonString = null;
         if (cache != null) {
             geoJsonString = cache.get(tpSeq);

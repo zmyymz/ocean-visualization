@@ -4,6 +4,7 @@ import com.csu.oceanvisualization.entity.Feature;
 import com.csu.oceanvisualization.entity.GeoJsonFeature;
 import com.csu.oceanvisualization.entity.Geometry;
 import com.csu.oceanvisualization.entity.TyphoonProperty;
+import com.csu.oceanvisualization.servicebase.exceptionhandler.OceanException;
 import com.csu.oceanvisualization.utils.CMDUtils;
 import com.csu.oceanvisualization.utils.DateUtils;
 import com.csu.oceanvisualization.utils.FileUtils;
@@ -34,10 +35,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -205,14 +203,55 @@ public class OceanTest {
         return "";
     }
 
+    /**
+     * 测试 GDAL 命令行
+     *
+     * @throws IOException
+     */
     @Test
     public void testgdalTranslate() throws IOException {
-        GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/test/");
+        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/test/");
         // GDALUtils.gdalTranslate("D:/OceanVisualization/data/temp.nc", "D:/temp/");
         // GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
-
         // gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/");
         // System.out.println(getDateToString(88881984000000L));
+
+        // long start = System.nanoTime();
+        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
+        // long end = System.nanoTime();
+        // System.out.println(end - start);
+
+
+        long start = System.nanoTime();
+        int processorsNum = Runtime.getRuntime().availableProcessors();
+
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(processorsNum, processorsNum * 2, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.AbortPolicy());
+        // ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 2, 1000, TimeUnit.MILLISECONDS, new SynchronousQueue<Runnable>(), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
+        // for (int i = 0; i < 5; i++) {
+        //     executor.execute(new Runnable() {
+        //         @SneakyThrows
+        //         @Override
+        //         public void run() {
+        //             // Thread.currentThread().setUncaughtExceptionHandler(new ExceptionHandler());
+        //             // System.out.println("执行了");
+        //             // GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
+        //             // System.out.println("执行完成");
+        //         }
+        //     });
+        // }
+        // long end = System.nanoTime();
+        // System.out.println(end - start);
+
+
+        Thread thread = new Thread() {
+            @SneakyThrows
+            @Override
+            public void run() {
+                System.out.println(CMDUtils.executeCMD("ping baidu.com"));
+                // GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
+            }
+        };
+        thread.start();
     }
 
     /**
@@ -393,6 +432,7 @@ public class OceanTest {
 
     /**
      * 遍历目录文件
+     *
      * @throws IOException
      */
     @Test
@@ -452,6 +492,7 @@ public class OceanTest {
 
     /**
      * Guava缓存测试
+     *
      * @throws ExecutionException
      */
     @Test
@@ -538,7 +579,7 @@ public class OceanTest {
      * 路径测试
      */
     @Test
-    public void testPathTransform(){
+    public void testPathTransform() {
         String path = "D:/aaa" + "/bbb.json";
         System.out.println(FilenameUtils.separatorsToSystem(path));
 
@@ -551,4 +592,91 @@ public class OceanTest {
 
     }
 
+    @SneakyThrows
+    @Test
+    public void testCopyFiles() {
+        File srcPath = new File("D:/a");
+
+        //创建目的路径对象
+        File destPath = new File("D:/b");
+        if (!destPath.exists()) {
+            destPath.mkdir();
+        }
+
+        //获取源路径下所有文件
+        File[] srcFileList = srcPath.listFiles();
+        //遍历每一个文件
+        for (File file : srcFileList) {
+            //获取每一个文件的路径
+            //System.out.println(file.getCanonicalPath());
+
+            //File newDestPath = new File(destPath,file.getName());
+            copyFolder(file, destPath);
+        }
+
+    }
+
+    /**
+     * 拷贝文件夹
+     *
+     * @param srcPath  源路径
+     * @param destPath 目的路径
+     * @throws Exception
+     */
+    public static void copyFolder(File srcPath, File destPath) throws Exception {
+        //判断是否是目录
+        //若是目录,则递归
+        if (srcPath.isDirectory()) {
+            //获取源路径下某个目录的名称
+            String srcPathName = srcPath.getName();
+            //在目的路径下创建新的目录
+            File newDestPath = new File(destPath, srcPathName);
+            //判断目的路径下该目录是否已经被创建
+            if (!newDestPath.exists()) {
+                newDestPath.mkdir();
+                //获取源路径下所有的目录及文件
+                File[] allPathList = srcPath.listFiles();
+                for (File file : allPathList) {
+                    //进行递归调用
+                    copyFolder(file, newDestPath);
+                }
+            }
+        }
+        //若是文件则直接拷贝
+        else {
+            File newDestPath = new File(destPath, srcPath.getName());
+            copyFile(srcPath, newDestPath);
+
+        }
+    }
+
+    /**
+     * 拷贝文件
+     *
+     * @param srcPath     源路径
+     * @param newDestPath 目的路径
+     * @throws Exception
+     */
+    public static void copyFile(File srcPath, File newDestPath) throws Exception {
+        try (
+                BufferedInputStream in = new BufferedInputStream(new FileInputStream(srcPath));
+                BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(newDestPath));
+        ) {
+            byte[] data = new byte[1024];
+            int length = 0;
+            while ((length = in.read(data)) != -1) {
+                out.write(data, 0, length);
+            }
+        }
+    }
+
+
+
+}
+
+class ExceptionHandler implements Thread.UncaughtExceptionHandler {
+    @Override
+    public void uncaughtException(Thread t, Throwable e) {
+        System.out.println("==Exception: " + e.getMessage());
+    }
 }

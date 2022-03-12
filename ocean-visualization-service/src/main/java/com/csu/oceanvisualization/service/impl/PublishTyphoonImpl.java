@@ -1,14 +1,14 @@
 package com.csu.oceanvisualization.service.impl;
 
 import com.csu.oceanvisualization.service.AbstractTyphoon;
+import com.csu.oceanvisualization.servicebase.exceptionhandler.OceanException;
 import com.csu.oceanvisualization.utils.FileUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -39,6 +39,29 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     @Override
     protected void traverseFile() {
         // 递归将userFilePath下的文件复制到serverTempFilePath
+        File srcPath = new File("D:/a");
+
+        //创建目的路径对象
+        File destPath = new File("D:/b");
+        if (!destPath.exists()) {
+            destPath.mkdir();
+        }
+
+        //获取源路径下所有文件
+        File[] srcFileList = srcPath.listFiles();
+        //遍历每一个文件
+        for (File file : srcFileList) {
+            //获取每一个文件的路径
+            //System.out.println(file.getCanonicalPath());
+
+            //File newDestPath = new File(destPath,file.getName());
+            try {
+                copyFolder(file, destPath);
+            } catch (Exception e) {
+                // e.printStackTrace();
+                throw new OceanException(20001, "台风数据复制出现异常");
+            }
+        }
     }
 
     @Override
@@ -69,7 +92,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-        }else{
+        } else {
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(file, map);
@@ -81,6 +104,61 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
 
     @Override
     protected void publishTifLayer() {
+        // 发布serverTempFilePath下的文件
+    }
 
+
+    /**
+     * 拷贝文件夹
+     *
+     * @param srcPath  源路径
+     * @param destPath 目的路径
+     * @throws Exception
+     */
+    public static void copyFolder(File srcPath, File destPath) throws Exception {
+        //判断是否是目录
+        //若是目录,则递归
+        if (srcPath.isDirectory()) {
+            //获取源路径下某个目录的名称
+            String srcPathName = srcPath.getName();
+            //在目的路径下创建新的目录
+            File newDestPath = new File(destPath, srcPathName);
+            //判断目的路径下该目录是否已经被创建
+            if (!newDestPath.exists()) {
+                newDestPath.mkdir();
+                //获取源路径下所有的目录及文件
+                File[] allPathList = srcPath.listFiles();
+                for (File file : allPathList) {
+                    //进行递归调用
+                    copyFolder(file, newDestPath);
+                }
+            }
+        }
+        //若是文件则直接拷贝
+        else {
+            File newDestPath = new File(destPath, srcPath.getName());
+            copyFile(srcPath, newDestPath);
+
+        }
+    }
+
+    /**
+     * 拷贝文件
+     *
+     * @param srcPath     源路径
+     * @param newDestPath 目的路径
+     * @throws Exception
+     */
+    public static void copyFile(File srcPath, File newDestPath) throws Exception {
+        try (
+                BufferedInputStream in = new BufferedInputStream(new FileInputStream(srcPath));
+                BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(newDestPath));
+        ) {
+            byte[] data = new byte[1024];
+            int length = 0;
+            while ((length = in.read(data)) != -1) {
+                out.write(data, 0, length);
+            }
+        }
     }
 }

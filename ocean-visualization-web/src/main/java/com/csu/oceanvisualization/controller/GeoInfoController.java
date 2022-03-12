@@ -23,14 +23,6 @@ public class GeoInfoController {
 
     @GetMapping("getGeojsonData/{fourOceans}/{tpSeq}")
     public Result getGeoJsonData(@PathVariable String fourOceans, @PathVariable String tpSeq) throws ExecutionException {
-        // String geoJsonData;
-        // try {
-        //     geoJsonData = geoJsonDataService.getGeoJsonData();
-        // } catch (Exception e) {
-        //     throw new OceanException(20001, "txt转geojson出现异常");
-        // }
-
-
         String geoJsonData = geoJsonDataService.getGeoJsonData(fourOceans, tpSeq);
         return Result.ok().data("geoJsonData", geoJsonData);
     }

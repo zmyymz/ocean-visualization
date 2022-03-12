@@ -1,6 +1,7 @@
 package com.csu.oceanvisualization.service.impl;
 
 import com.csu.oceanvisualization.service.TyphoonMetaDataService;
+import com.csu.oceanvisualization.servicebase.exceptionhandler.OceanException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,14 +27,15 @@ public class TyphoonMetaDataServiceImpl implements TyphoonMetaDataService {
     @Override
     public List<String> getTyphoonMetaData(String fourOceans) {
         ObjectMapper objectMapper = new ObjectMapper();
-        ConcurrentHashMap concurrentHashMap = null;
+        ConcurrentHashMap<String, List<String>> concurrentHashMap = null;
         try {
             String metaDataJsonPath = serverFilePropertyPath + "/typhoonMetaData.json";
             concurrentHashMap = objectMapper.readValue(new File(FilenameUtils.separatorsToSystem(metaDataJsonPath)), ConcurrentHashMap.class);
         } catch (IOException e) {
             e.printStackTrace();
+            throw new OceanException(20001, "获取台风元数据失败");
         }
         // System.out.println(concurrentHashMap);
-        return (List<String>) concurrentHashMap.get(fourOceans.toUpperCase());
+        return concurrentHashMap.get(fourOceans.toUpperCase());
     }
 }

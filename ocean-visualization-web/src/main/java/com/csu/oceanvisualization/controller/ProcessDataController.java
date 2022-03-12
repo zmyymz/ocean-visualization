@@ -31,8 +31,6 @@ public class ProcessDataController {
 
     @GetMapping("processOceanData")
     public Result processOceanData() throws ExecutionException {
-        // todo 调用AbstractOcean
-        // AbstractOcean publishOcean = new PublishOceanImpl();
         publishOcean.publishOceanLayer();
         return Result.ok();
     }
@@ -42,13 +40,4 @@ public class ProcessDataController {
         publishTyphoon.publishTyphoonLayer();;
         return Result.ok();
     }
-
-
-    // @GetMapping("processTyphoonData/{fouroceans}")
-    // public Result processTyphoonData() throws ExecutionException {
-    //     // todo 调用AbstractOcean
-    //     // AbstractOcean publishOcean = new PublishOceanImpl();
-    //     // publishOcean.publishOceanLayer();
-    //     return Result.ok();
-    // }
 }

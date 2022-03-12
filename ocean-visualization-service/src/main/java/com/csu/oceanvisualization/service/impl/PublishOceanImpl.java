@@ -48,7 +48,7 @@ public class PublishOceanImpl extends AbstractOcean {
 
         // 2. 先判断serverTempFilePath是否有这些文件, 根据md5
 
-        // 3. 如果没有就将所有nc文件复制到 serverTempFilePath, 计算文件md5, 写入文件/geoserver/property/ncfilemd5
+        // 3. 如果没有就将所有nc文件复制到 serverTempFilePath, 计算文件md5, 将md5值写入文件/geoserver/property/ncfilemd5
 
         // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
 
