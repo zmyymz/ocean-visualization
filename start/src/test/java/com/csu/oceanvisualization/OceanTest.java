@@ -27,12 +27,15 @@ import ucar.nc2.Variable;
 
 
 import java.io.*;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.*;
@@ -592,6 +595,9 @@ public class OceanTest {
 
     }
 
+    /**
+     * 测试复制台风数据
+     */
     @SneakyThrows
     @Test
     public void testCopyFiles() {
@@ -646,28 +652,159 @@ public class OceanTest {
         else {
             File newDestPath = new File(destPath, srcPath.getName());
             copyFile(srcPath, newDestPath);
+        }
+    }
 
+
+    /**
+     * 测试复制海洋数据
+     */
+    @Test
+    public void testTraverseFile() throws Exception {
+
+        // 1. 遍历userFilePath目录, 获取所有nc路径
+        File src = new File( "D:/a");
+        File dest = new File("D:/b");
+        if(!dest.exists()) {
+            dest.mkdir();
+        }
+
+        //String srcPath = "D://ocean//user_ocean_data";
+        //String destPath = "D://ocean//serverTempFile";
+
+
+
+        //获取源路径下所有文件
+        File[] srcFileList = src.listFiles();
+        //遍历每一个文件
+        for(File file : srcFileList) {
+            File newDestPath = new File(dest,file.getName());
+
+            // 2. 先判断serverTempFilePath是否有这些文件, 根据md5
+            //不存在与源文件md5相同的文件,则拷贝
+            if(!check(file, dest)) {
+                // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
+                copyFile(file,newDestPath);
+            }
+        }
+
+    }
+
+    /**
+     *  判断目的目录下是否有和源文件md5值相同的文件
+     * @param oldFile   源文件
+     * @param dest      目的目录
+     * @return
+     */
+    @SneakyThrows
+    public static boolean check(File oldFile, File dest) {
+        String oldMd5 = md5(oldFile);
+
+        String path = "D:/c/ncfilemd5.txt";
+        File file = new File(path);
+        if (!file.exists()){
+            file.createNewFile();
+        }
+        StringBuilder result = new StringBuilder();
+        try{
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));//构造一个BufferedReader类来读取文件
+
+            String s = null;
+            while((s = br.readLine())!=null){//使用readLine方法，一次读一行
+                if (oldMd5.equals(s)) {
+                    br.close();
+                    return true;
+                }
+            }
+            //
+            br.close();
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+
+        // 3. 如果没有就将所有nc文件复制到 serverTempFilePath,
+        //计算文件md5, 写入文件/geoserver/property/ncfilemd5
+        writeMd5(oldMd5);
+        return false;
+    }
+
+    /**
+     *   将源文件的md5写入test.txt文本中
+     * @param md5
+     */
+    public static void writeMd5(String md5) {
+        String filePath = "D:/c/ncfilemd5.txt";
+        FileWriter fwriter = null;
+        try {
+            //不覆盖原来的内容,直接添加到后面
+            fwriter = new FileWriter(filePath, true);
+            fwriter.write(md5);
+            fwriter.write("\r\n");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                fwriter.flush();
+                fwriter.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
     }
 
     /**
+     * 计算文件的md5
+     * @param f  源文件
+     * @return
+     */
+    private static String md5(File f) {
+        try(FileInputStream fis = new FileInputStream(f)){
+            //消息摘要
+            MessageDigest md = MessageDigest.getInstance("md5");
+
+            byte[] bytes = new byte[2048];
+            int len = 0;
+            while((len = fis.read(bytes)) != -1) {
+                md.update(bytes, 0, len);
+            }
+            byte[] digest = md.digest();
+
+            //16进制转换
+            BigInteger bi = new BigInteger(1, digest);
+            return bi.toString(16);
+        }catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }catch (IOException e) {
+            e.printStackTrace();
+        }catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
      * 拷贝文件
-     *
-     * @param srcPath     源路径
-     * @param newDestPath 目的路径
+     * @param srcPath		源文件
+     * @param newDestPath	目的目录
      * @throws Exception
      */
-    public static void copyFile(File srcPath, File newDestPath) throws Exception {
-        try (
+    public static void copyFile(File srcPath,File newDestPath) throws Exception{
+        try(
                 BufferedInputStream in = new BufferedInputStream(new FileInputStream(srcPath));
                 BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(newDestPath));
-        ) {
+        ){
             byte[] data = new byte[1024];
             int length = 0;
-            while ((length = in.read(data)) != -1) {
+            while((length = in.read(data)) != -1) {
                 out.write(data, 0, length);
             }
         }
+    }
+
+    @Test
+    public void testFilePath(){
+        System.out.println(FilenameUtils.separatorsToSystem("D:/Ocean/property/" + "ncfilemd5.txt"));
     }
 
 

@@ -39,10 +39,10 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     @Override
     protected void traverseFile() {
         // 递归将userFilePath下的文件复制到serverTempFilePath
-        File srcPath = new File("D:/a");
+        File srcPath = new File(userFilePath);
 
         //创建目的路径对象
-        File destPath = new File("D:/b");
+        File destPath = new File(serverTempFilePath);
         if (!destPath.exists()) {
             destPath.mkdir();
         }
@@ -137,28 +137,9 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         //若是文件则直接拷贝
         else {
             File newDestPath = new File(destPath, srcPath.getName());
-            copyFile(srcPath, newDestPath);
-
+            FileUtils.copyFile(srcPath, newDestPath);
         }
     }
 
-    /**
-     * 拷贝文件
-     *
-     * @param srcPath     源路径
-     * @param newDestPath 目的路径
-     * @throws Exception
-     */
-    public static void copyFile(File srcPath, File newDestPath) throws Exception {
-        try (
-                BufferedInputStream in = new BufferedInputStream(new FileInputStream(srcPath));
-                BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(newDestPath));
-        ) {
-            byte[] data = new byte[1024];
-            int length = 0;
-            while ((length = in.read(data)) != -1) {
-                out.write(data, 0, length);
-            }
-        }
-    }
+
 }

@@ -1,6 +1,7 @@
 package com.csu.oceanvisualization.service.impl;
 
 import com.csu.oceanvisualization.service.AbstractOcean;
+import com.csu.oceanvisualization.servicebase.exceptionhandler.OceanException;
 import com.csu.oceanvisualization.utils.CMDUtils;
 import com.csu.oceanvisualization.utils.FileUtils;
 import com.csu.oceanvisualization.utils.GDALUtils;
@@ -10,8 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StopWatch;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -35,6 +35,9 @@ public class PublishOceanImpl extends AbstractOcean {
     @Value("${com.csu.ocean.serverfile-path}")
     private String serverTempFilePath;
 
+    @Value("${com.csu.typhoon.file-property-path}")
+    private String serverFilePropertyPath;
+
     // /geoserver/ocean_data
     @Value("${com.csu.ocean.servertiffile-path}")
     private String serverTifFilePath;
@@ -52,11 +55,29 @@ public class PublishOceanImpl extends AbstractOcean {
 
         // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
 
-        // System.out.println(userFilePath);
-        // System.out.println(serverTempFilePath);
-        // System.out.println(serverTifFilePath);
-
-
+        // 1. 遍历userFilePath目录, 获取所有nc路径
+        File src = new File(userFilePath);
+        File dest = new File(serverTempFilePath);
+        if (!dest.exists()) {
+            dest.mkdir();
+        }
+        //获取源路径下所有文件
+        File[] srcFileList = src.listFiles();
+        //遍历每一个文件
+        for (File file : srcFileList) {
+            File newDestPath = new File(dest, file.getName());
+            // 2. 先判断serverTempFilePath是否有这些文件, 根据md5
+            //不存在与源文件md5相同的文件,则拷贝
+            if (!check(file, dest)) {
+                // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
+                try {
+                    FileUtils.copyFile(file, newDestPath);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    throw new OceanException(20001, "复制海洋数据出现异常");
+                }
+            }
+        }
     }
 
     @SneakyThrows
@@ -117,5 +138,72 @@ public class PublishOceanImpl extends AbstractOcean {
     @Override
     protected void deleteTifFile() {
         // FileUtils.delDir(serverTifFilePath);
+    }
+
+
+    /**
+     * 判断目的目录下是否有和源文件md5值相同的文件
+     *
+     * @param oldFile 源文件
+     * @param dest    目的目录
+     * @return
+     */
+    @SneakyThrows
+    public boolean check(File oldFile, File dest) {
+        String oldMd5 = FileUtils.md5(oldFile);
+
+        String path = FilenameUtils.separatorsToSystem(serverFilePropertyPath + "ncfilemd5.txt");
+        File file = new File(path);
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+        StringBuilder result = new StringBuilder();
+        try {
+            BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));//构造一个BufferedReader类来读取文件
+
+            String s = null;
+            while ((s = br.readLine()) != null) {//使用readLine方法，一次读一行
+                assert oldMd5 != null;
+                if (oldMd5.equals(s)) {
+                    br.close();
+                    return true;
+                }
+            }
+            //
+            br.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // 3. 如果没有就将所有nc文件复制到 serverTempFilePath,
+        //计算文件md5, 写入文件/geoserver/property/ncfilemd5
+        writeMd5(oldMd5);
+        return false;
+    }
+
+    /**
+     * 将源文件的md5写入test.txt文本中
+     *
+     * @param md5
+     */
+    public void writeMd5(String md5) {
+        String filePath = FilenameUtils.separatorsToSystem(serverFilePropertyPath + "ncfilemd5.txt");
+
+        FileWriter fwriter = null;
+        try {
+            //不覆盖原来的内容,直接添加到后面
+            fwriter = new FileWriter(filePath, true);
+            fwriter.write(md5);
+            fwriter.write("\r\n");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+                fwriter.flush();
+                fwriter.close();
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 }

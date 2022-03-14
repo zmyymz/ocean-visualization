@@ -1,9 +1,12 @@
 package com.csu.oceanvisualization.utils;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,5 +64,53 @@ public class FileUtils {
         }
         // 返回.txt文件个数
         return list;
+    }
+
+
+
+    /**
+     * 计算文件的md5
+     * @param f  源文件
+     * @return
+     */
+    public static String md5(File f) {
+        try(FileInputStream fis = new FileInputStream(f)){
+            //消息摘要
+            MessageDigest md = MessageDigest.getInstance("md5");
+
+            byte[] bytes = new byte[2048];
+            int len = 0;
+            while((len = fis.read(bytes)) != -1) {
+                md.update(bytes, 0, len);
+            }
+            byte[] digest = md.digest();
+
+            //16进制转换
+            BigInteger bi = new BigInteger(1, digest);
+            return bi.toString(16);
+        } catch (IOException | NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    /**
+     * 拷贝文件
+     * @param srcPath		源文件
+     * @param newDestPath	目的目录
+     * @throws Exception
+     */
+    public static void copyFile(File srcPath,File newDestPath) throws Exception{
+        try(
+                BufferedInputStream in = new BufferedInputStream(new FileInputStream(srcPath));
+                BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(newDestPath));
+        ){
+            byte[] data = new byte[1024];
+            int length = 0;
+            while((length = in.read(data)) != -1) {
+                out.write(data, 0, length);
+            }
+        }
     }
 }
