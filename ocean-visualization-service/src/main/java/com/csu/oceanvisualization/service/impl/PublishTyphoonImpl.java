@@ -25,16 +25,17 @@ import java.util.stream.Collectors;
  */
 @Service
 public class PublishTyphoonImpl extends AbstractTyphoon {
-    // /home/user_typhoon_data
     @Value("${com.csu.typhoon.userfile-path}")
     private String userFilePath;
 
-    // /geoserver/typhoon_data_temp
     @Value("${com.csu.typhoon.serverfile-path}")
     private String serverTempFilePath;
 
     @Value("${com.csu.typhoon.file-property-path}")
     private String serverFilePropertyPath;
+
+    @Value("${com.csu.typhoon.stylefile-path}")
+    private String serverStyleFilePath;
 
     @Override
     protected void traverseFile() {

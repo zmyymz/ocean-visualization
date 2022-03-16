@@ -29,18 +29,15 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class PublishOceanImpl extends AbstractOcean {
-    // /home/user_ocean_data
     @Value("${com.csu.ocean.userfile-path}")
     private String userFilePath;
 
-    // /geoserver/ocean_data_temp
     @Value("${com.csu.ocean.serverfile-path}")
     private String serverTempFilePath;
 
     @Value("${com.csu.typhoon.file-property-path}")
     private String serverFilePropertyPath;
 
-    // /geoserver/ocean_data
     @Value("${com.csu.ocean.servertiffile-path}")
     private String serverTifFilePath;
 
