@@ -6,6 +6,7 @@ import com.csu.oceanvisualization.utils.CMDUtils;
 import com.csu.oceanvisualization.utils.FileUtils;
 import com.csu.oceanvisualization.utils.GDALUtils;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
  * @Package com.csu.oceanvisualization.service
  * @date 2022/3/3 14:04
  */
+@Slf4j
 @Service
 public class PublishOceanImpl extends AbstractOcean {
     // /home/user_ocean_data
@@ -48,11 +50,8 @@ public class PublishOceanImpl extends AbstractOcean {
     @Override
     protected void traverseFile() {
         // 1. 遍历userFilePath目录, 获取所有nc路径
-
         // 2. 先判断serverTempFilePath是否有这些文件, 根据md5
-
         // 3. 如果没有就将所有nc文件复制到 serverTempFilePath, 计算文件md5, 将md5值写入文件/geoserver/property/ncfilemd5
-
         // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
 
         // 1. 遍历userFilePath目录, 获取所有nc路径
@@ -97,12 +96,14 @@ public class PublishOceanImpl extends AbstractOcean {
                 String scriptRelativePath = "ocean-visualization/ocean-visualization-service/src/main/java/com/csu/oceanvisualization/scripts/addErrorVariable.py";
                 String scriptPathPath = FilenameUtils.separatorsToSystem(projectPath + scriptRelativePath);
                 String commandStr = "cmd /c python " + scriptPathPath + " " + file;
-                // CMDUtils.executeCMD(commandStr);
-                System.out.println(commandStr);
+                CMDUtils.executeCMD(commandStr);
+                log.info("执行" + commandStr);
+                // System.out.println(commandStr);
             } else {
                 // 执行 linux cmd
                 String commandStr = "python addErrorVariable.py " + file;
                 CMDUtils.executeCMD(commandStr);
+                log.info("执行" + commandStr);
             }
         });
     }
@@ -160,7 +161,6 @@ public class PublishOceanImpl extends AbstractOcean {
         StringBuilder result = new StringBuilder();
         try {
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));//构造一个BufferedReader类来读取文件
-
             String s = null;
             while ((s = br.readLine()) != null) {//使用readLine方法，一次读一行
                 assert oldMd5 != null;
@@ -169,12 +169,10 @@ public class PublishOceanImpl extends AbstractOcean {
                     return true;
                 }
             }
-            //
             br.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
         // 3. 如果没有就将所有nc文件复制到 serverTempFilePath,
         //计算文件md5, 写入文件/geoserver/property/ncfilemd5
         writeMd5(oldMd5);
