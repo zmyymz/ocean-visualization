@@ -218,7 +218,9 @@ public class OceanTest {
         //
         // GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/SWH/");
         // GDALUtils.gdalTranslate("D:/OceanVisualization/data/temp.nc", "D:/temp/");
-        GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
+        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
+
+        GDALUtils.gdalTranslate("D:/geoserver/ocean_data_temp/SWH.nc", "D:/SWH_more/");
 
         // gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/");
         // System.out.println(getDateToString(88881984000000L));
@@ -809,6 +811,29 @@ public class OceanTest {
     @Test
     public void testFilePath(){
         System.out.println(FilenameUtils.separatorsToSystem("D:/Ocean/property/" + "ncfilemd5.txt"));
+    }
+
+    @Test
+    public void testOcean(){
+        // 遍历serverFilePath目录下的所有文件, 依次执行gdal_translate命令
+        File ncFolder = new File("D:/geoserver/ocean_data_temp/");
+        File[] ncFilePath = ncFolder.listFiles();
+        String property = System.getProperties().getProperty("os.name");
+
+        if (ncFilePath != null) {
+            for (File file : ncFilePath) {
+                if (file.isFile()) {
+                    System.out.println(file.getName());
+                    if (file.getName().endsWith(".nc")) {
+                        try {
+                            GDALUtils.gdalTranslate("D:/geoserver/ocean_data_temp/", "D:/geoserver/ocean_data/");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
     }
 
 

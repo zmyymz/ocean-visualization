@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import ucar.ma2.Array;
 import ucar.nc2.Attribute;
 import ucar.nc2.NetcdfFile;
+import ucar.nc2.NetcdfFiles;
 import ucar.nc2.Variable;
 import org.junit.platform.commons.util.StringUtils;
 
@@ -29,7 +30,7 @@ public class GDALUtils {
         String filePath = inputFilePath;
 
         // 2° 读取文件
-        // NetcdfFile netcdfFile = NetcdfFiles.open(filePath);
+        // NetcdfFile ncFile = NetcdfFiles.open(filePath);
         NetcdfFile ncFile = NetcdfFile.open(filePath, null);
 
         // 获取所有的变量名

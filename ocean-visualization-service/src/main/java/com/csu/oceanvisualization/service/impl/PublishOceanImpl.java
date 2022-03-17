@@ -94,13 +94,13 @@ public class PublishOceanImpl extends AbstractOcean {
                 String scriptPathPath = FilenameUtils.separatorsToSystem(projectPath + scriptRelativePath);
                 String commandStr = "cmd /c python " + scriptPathPath + " " + file;
                 CMDUtils.executeCMD(commandStr);
-                log.info("执行" + commandStr);
+                log.info("执行添加变量脚本: " + commandStr);
                 // System.out.println(commandStr);
             } else {
                 // 执行 linux cmd
                 String commandStr = "python addErrorVariable.py " + file;
                 CMDUtils.executeCMD(commandStr);
-                log.info("执行" + commandStr);
+                log.info("执行添加变量脚本: " + commandStr);
             }
         });
     }
@@ -117,7 +117,7 @@ public class PublishOceanImpl extends AbstractOcean {
                 if (file.isFile()) {
                     if (file.getName().endsWith(".nc")) {
                         try {
-                            GDALUtils.gdalTranslate(serverTempFilePath, serverTifFilePath);
+                            GDALUtils.gdalTranslate(FilenameUtils.separatorsToSystem(file.getAbsolutePath()), serverTifFilePath);
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
