@@ -213,9 +213,13 @@ public class OceanTest {
      */
     @Test
     public void testgdalTranslate() throws IOException {
-        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/test/");
+        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/SSH_202104.nc", "D:/SSH_202104/");
+        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/SSH_202109.nc", "D:/SSH_202109/");
+        //
+        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/SWH.nc", "D:/SWH/");
         // GDALUtils.gdalTranslate("D:/OceanVisualization/data/temp.nc", "D:/temp/");
-        // GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
+        GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
+
         // gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/");
         // System.out.println(getDateToString(88881984000000L));
 
@@ -225,10 +229,10 @@ public class OceanTest {
         // System.out.println(end - start);
 
 
-        long start = System.nanoTime();
-        int processorsNum = Runtime.getRuntime().availableProcessors();
-
-        ThreadPoolExecutor executor = new ThreadPoolExecutor(processorsNum, processorsNum * 2, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.AbortPolicy());
+        // long start = System.nanoTime();
+        // int processorsNum = Runtime.getRuntime().availableProcessors();
+        //
+        // ThreadPoolExecutor executor = new ThreadPoolExecutor(processorsNum, processorsNum * 2, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.AbortPolicy());
         // ThreadPoolExecutor executor = new ThreadPoolExecutor(1, 2, 1000, TimeUnit.MILLISECONDS, new SynchronousQueue<Runnable>(), Executors.defaultThreadFactory(), new ThreadPoolExecutor.AbortPolicy());
         // for (int i = 0; i < 5; i++) {
         //     executor.execute(new Runnable() {
@@ -246,15 +250,15 @@ public class OceanTest {
         // System.out.println(end - start);
 
 
-        Thread thread = new Thread() {
-            @SneakyThrows
-            @Override
-            public void run() {
-                System.out.println(CMDUtils.executeCMD("ping baidu.com"));
-                // GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
-            }
-        };
-        thread.start();
+        // Thread thread = new Thread() {
+        //     @SneakyThrows
+        //     @Override
+        //     public void run() {
+        //         System.out.println(CMDUtils.executeCMD("ping baidu.com"));
+        //         // GDALUtils.gdalTranslate("D:/OceanVisualization/data/wave_direction.nc", "D:/wave_direction/");
+        //     }
+        // };
+        // thread.start();
     }
 
     /**
