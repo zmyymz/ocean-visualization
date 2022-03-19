@@ -25,15 +25,15 @@ import org.springframework.web.bind.annotation.RestController;
 import com.csu.oceanvisualization.mybatis.entity.MybatisDemoUser;
 import com.csu.oceanvisualization.mybatis.mapper.MybatisDemoUserMapper;
 
-@RestController
-@RequestMapping("/usermybatis")
+// @RestController
+// @RequestMapping("/usermybatis")
 public class MybatisDemoUserController {
 
-    @Autowired
+    // @Autowired
     private MybatisDemoUserMapper mybatisDemoUserMapper;
 
     // http://127.0.0.1:8080/usermybatis/findAll
-    @RequestMapping("/findAll")
+    // @RequestMapping("/findAll")
     public List<MybatisDemoUser> findAll(){
         return mybatisDemoUserMapper.findAll();
     }

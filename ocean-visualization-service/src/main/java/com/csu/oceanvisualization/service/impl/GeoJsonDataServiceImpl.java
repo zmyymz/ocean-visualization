@@ -63,7 +63,7 @@ public class GeoJsonDataServiceImpl implements GeoJsonDataService {
                     .build(new CacheLoader<String, String>() {
                         @Override
                         public String load(String tpSeq) throws Exception {
-                            System.out.println("cache 执行了");
+                            // System.out.println("cache 执行了");
                             return parseBySerialize.parse(fourOceans, tpSeq);
                         }
                     });

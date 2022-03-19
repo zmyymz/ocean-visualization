@@ -16,7 +16,7 @@ import java.util.List;
  * @Package com.csu.oceanvisualization.utils
  * @date 2022/2/18 16:48
  */
-public class FileUtils {
+public class FileUtil {
     /**
      * 删除文件目录
      *
@@ -67,20 +67,20 @@ public class FileUtils {
     }
 
 
-
     /**
      * 计算文件的md5
-     * @param f  源文件
+     *
+     * @param f 源文件
      * @return
      */
     public static String md5(File f) {
-        try(FileInputStream fis = new FileInputStream(f)){
+        try (FileInputStream fis = new FileInputStream(f)) {
             //消息摘要
             MessageDigest md = MessageDigest.getInstance("md5");
 
             byte[] bytes = new byte[2048];
             int len = 0;
-            while((len = fis.read(bytes)) != -1) {
+            while ((len = fis.read(bytes)) != -1) {
                 md.update(bytes, 0, len);
             }
             byte[] digest = md.digest();
@@ -97,20 +97,33 @@ public class FileUtils {
 
     /**
      * 拷贝文件
-     * @param srcPath		源文件
-     * @param newDestPath	目的目录
+     *
+     * @param srcPath     源文件
+     * @param newDestPath 目的目录
      * @throws Exception
      */
-    public static void copyFile(File srcPath,File newDestPath) throws Exception{
-        try(
+    public static void copyFile(File srcPath, File newDestPath) throws Exception {
+        try (
                 BufferedInputStream in = new BufferedInputStream(new FileInputStream(srcPath));
                 BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(newDestPath));
-        ){
+        ) {
             byte[] data = new byte[1024];
             int length = 0;
-            while((length = in.read(data)) != -1) {
+            while ((length = in.read(data)) != -1) {
                 out.write(data, 0, length);
             }
         }
+    }
+
+    /**
+     * 获得某一个文件夹下所有文件名
+     *
+     * @param path
+     * @return
+     */
+    public static String[] getFileName(String path) {
+        File file = new File(path);
+        String[] fileName = file.list();
+        return fileName;
     }
 }

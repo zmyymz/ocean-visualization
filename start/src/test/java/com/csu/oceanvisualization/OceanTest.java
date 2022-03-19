@@ -4,10 +4,8 @@ import com.csu.oceanvisualization.entity.Feature;
 import com.csu.oceanvisualization.entity.GeoJsonFeature;
 import com.csu.oceanvisualization.entity.Geometry;
 import com.csu.oceanvisualization.entity.TyphoonProperty;
-import com.csu.oceanvisualization.servicebase.exceptionhandler.OceanException;
 import com.csu.oceanvisualization.utils.CMDUtils;
 import com.csu.oceanvisualization.utils.DateUtils;
-import com.csu.oceanvisualization.utils.FileUtils;
 import com.csu.oceanvisualization.utils.GDALUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
@@ -19,7 +17,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.assertj.core.util.Lists;
 import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.util.StopWatch;
 import ucar.ma2.Array;
 import ucar.nc2.NetcdfFile;
@@ -29,7 +26,6 @@ import ucar.nc2.Variable;
 import java.io.*;
 import java.math.BigInteger;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -119,17 +115,27 @@ public class OceanTest {
 
     @Test
     public void test03() throws ParseException {
-        // wave_direction时间测试
+        // wave_direction 时间范围
         List<Integer> timeRangeList = Arrays.asList(1054176, 1054177, 1054178, 1054179, 1054180, 1054181, 1054182);
         ArrayList<String> timeResultList = Lists.newArrayList();
         // HashSet<String> set = new HashSet<>();
         for (Integer time : timeRangeList) {
-            String nextDate = DateUtils.getNextDate("1900-01-01", time, Calendar.HOUR_OF_DAY, "yyyy-MM-dd");
+            String nextDate = DateUtils.getNextDate("1900-01-01 00:00:0:0", time, Calendar.HOUR_OF_DAY, "yyyy-MM-dd HH:mm:ss");
             timeResultList.add(nextDate);
             // set.add(nextDate);
         }
         System.out.println(timeResultList);
-        // System.out.println(set);
+
+        // SWH 时间范围
+        // List<Integer> timeRangeList = Arrays.asList(59310, 59311, 59312, 59313, 59314);
+        // ArrayList<String> timeResultList = Lists.newArrayList();
+        // // HashSet<String> set = new HashSet<>();
+        // for (Integer time : timeRangeList) {
+        //     String nextDate = DateUtils.getNextDate("1858-11-17", time, Calendar.DAY_OF_MONTH, "yyyy-MM-dd");
+        //     timeResultList.add(nextDate);
+        //     // set.add(nextDate);
+        // }
+        // System.out.println(timeResultList);
 
 
         // 台风数据测试
@@ -669,37 +675,31 @@ public class OceanTest {
     public void testTraverseFile() throws Exception {
 
         // 1. 遍历userFilePath目录, 获取所有nc路径
-        File src = new File( "D:/a");
+        File src = new File("D:/a");
         File dest = new File("D:/b");
-        if(!dest.exists()) {
+        if (!dest.exists()) {
             dest.mkdir();
         }
-
-        //String srcPath = "D://ocean//user_ocean_data";
-        //String destPath = "D://ocean//serverTempFile";
-
-
-
         //获取源路径下所有文件
         File[] srcFileList = src.listFiles();
         //遍历每一个文件
-        for(File file : srcFileList) {
-            File newDestPath = new File(dest,file.getName());
+        for (File file : srcFileList) {
+            File newDestPath = new File(dest, file.getName());
 
             // 2. 先判断serverTempFilePath是否有这些文件, 根据md5
             //不存在与源文件md5相同的文件,则拷贝
-            if(!check(file, dest)) {
+            if (!check(file, dest)) {
                 // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
-                copyFile(file,newDestPath);
+                copyFile(file, newDestPath);
             }
         }
-
     }
 
     /**
-     *  判断目的目录下是否有和源文件md5值相同的文件
-     * @param oldFile   源文件
-     * @param dest      目的目录
+     * 判断目的目录下是否有和源文件md5值相同的文件
+     *
+     * @param oldFile 源文件
+     * @param dest    目的目录
      * @return
      */
     @SneakyThrows
@@ -708,15 +708,15 @@ public class OceanTest {
 
         String path = "D:/c/ncfilemd5.txt";
         File file = new File(path);
-        if (!file.exists()){
+        if (!file.exists()) {
             file.createNewFile();
         }
         StringBuilder result = new StringBuilder();
-        try{
+        try {
             BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(file), "UTF-8"));//构造一个BufferedReader类来读取文件
 
             String s = null;
-            while((s = br.readLine())!=null){//使用readLine方法，一次读一行
+            while ((s = br.readLine()) != null) {//使用readLine方法，一次读一行
                 if (oldMd5.equals(s)) {
                     br.close();
                     return true;
@@ -724,7 +724,7 @@ public class OceanTest {
             }
             //
             br.close();
-        }catch(Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
@@ -735,7 +735,8 @@ public class OceanTest {
     }
 
     /**
-     *   将源文件的md5写入test.txt文本中
+     * 将源文件的md5写入test.txt文本中
+     *
      * @param md5
      */
     public static void writeMd5(String md5) {
@@ -760,17 +761,18 @@ public class OceanTest {
 
     /**
      * 计算文件的md5
-     * @param f  源文件
+     *
+     * @param f 源文件
      * @return
      */
     private static String md5(File f) {
-        try(FileInputStream fis = new FileInputStream(f)){
+        try (FileInputStream fis = new FileInputStream(f)) {
             //消息摘要
             MessageDigest md = MessageDigest.getInstance("md5");
 
             byte[] bytes = new byte[2048];
             int len = 0;
-            while((len = fis.read(bytes)) != -1) {
+            while ((len = fis.read(bytes)) != -1) {
                 md.update(bytes, 0, len);
             }
             byte[] digest = md.digest();
@@ -778,11 +780,11 @@ public class OceanTest {
             //16进制转换
             BigInteger bi = new BigInteger(1, digest);
             return bi.toString(16);
-        }catch (FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
-        }catch (NoSuchAlgorithmException e) {
+        } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }
 
@@ -791,18 +793,19 @@ public class OceanTest {
 
     /**
      * 拷贝文件
-     * @param srcPath		源文件
-     * @param newDestPath	目的目录
+     *
+     * @param srcPath     源文件
+     * @param newDestPath 目的目录
      * @throws Exception
      */
-    public static void copyFile(File srcPath,File newDestPath) throws Exception{
-        try(
+    public static void copyFile(File srcPath, File newDestPath) throws Exception {
+        try (
                 BufferedInputStream in = new BufferedInputStream(new FileInputStream(srcPath));
                 BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(newDestPath));
-        ){
+        ) {
             byte[] data = new byte[1024];
             int length = 0;
-            while((length = in.read(data)) != -1) {
+            while ((length = in.read(data)) != -1) {
                 out.write(data, 0, length);
             }
         }
@@ -810,39 +813,11 @@ public class OceanTest {
 
     @Test
     public void testFilePath(){
-        System.out.println(FilenameUtils.separatorsToSystem("D:/Ocean/property/" + "ncfilemd5.txt"));
-    }
-
-    @Test
-    public void testOcean(){
-        // 遍历serverFilePath目录下的所有文件, 依次执行gdal_translate命令
-        File ncFolder = new File("D:/geoserver/ocean_data_temp/");
-        File[] ncFilePath = ncFolder.listFiles();
-        String property = System.getProperties().getProperty("os.name");
-
-        if (ncFilePath != null) {
-            for (File file : ncFilePath) {
-                if (file.isFile()) {
-                    System.out.println(file.getName());
-                    if (file.getName().endsWith(".nc")) {
-                        try {
-                            GDALUtils.gdalTranslate("D:/geoserver/ocean_data_temp/", "D:/geoserver/ocean_data/");
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }
-            }
-        }
+        String serverFilePropertyPath = "D:/a/";
+        String metaDataJsonPath = serverFilePropertyPath + "typhoonMetaData.json";
+        System.out.println(FilenameUtils.separatorsToSystem(metaDataJsonPath));
+        System.out.println(FilenameUtils.separatorsToUnix(metaDataJsonPath));
     }
 
 
-
-}
-
-class ExceptionHandler implements Thread.UncaughtExceptionHandler {
-    @Override
-    public void uncaughtException(Thread t, Throwable e) {
-        System.out.println("==Exception: " + e.getMessage());
-    }
 }

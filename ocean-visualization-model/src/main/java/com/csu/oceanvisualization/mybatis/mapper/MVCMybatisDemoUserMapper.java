@@ -30,7 +30,7 @@ import java.util.List;
  *
  * @author paida 派哒 zeyu.pzy@alibaba-inc.com
  */
-@Mapper
+// @Mapper
 public interface MVCMybatisDemoUserMapper {
     MVCMybatisDemoUser queryUserInfo(String id);
 }

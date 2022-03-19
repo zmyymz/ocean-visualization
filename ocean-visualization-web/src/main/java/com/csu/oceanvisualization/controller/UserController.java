@@ -13,12 +13,12 @@ import com.csu.oceanvisualization.commonutils.Result;
  * @Package com.csu.oceanvisualization.controller
  * @date 2022/2/19 10:54
  */
-@RestController
-@RequestMapping("/ocean/user")
-@CrossOrigin
+// @RestController
+// @RequestMapping("/ocean/user")
+// @CrossOrigin
 public class UserController {
 
-    @GetMapping("find")
+    // @GetMapping("find")
     public Result getUserInfo() {
         try {
             int a = 10 / 0;

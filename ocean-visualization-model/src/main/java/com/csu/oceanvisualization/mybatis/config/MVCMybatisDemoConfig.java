@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * @author paida 派哒 zeyu.pzy@alibaba-inc.com
  */
-@Configuration
-@MapperScan("com.csu.oceanvisualization.mybatis")
+// @Configuration
+// @MapperScan("com.csu.oceanvisualization.mybatis")
 public class MVCMybatisDemoConfig {
 }
