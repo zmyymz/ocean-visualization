@@ -59,6 +59,16 @@ public class PublishOceanImpl extends AbstractOcean {
     private GeoServerProperties geoServerProperties;
 
     @Override
+    protected boolean needGdalTranslate() {
+        return false;
+    }
+
+    @Override
+    protected boolean needCalculateError() {
+        return false;
+    }
+
+    @Override
     protected void traverseFile() {
         // 1. 遍历userFilePath目录, 获取所有nc路径
         // 2. 先判断serverTempFilePath是否有这些文件, 根据md5
@@ -71,13 +81,13 @@ public class PublishOceanImpl extends AbstractOcean {
         if (!dest.exists()) {
             dest.mkdir();
         }
-        //获取源路径下所有文件
+        // 获取源路径下所有文件
         File[] srcFileList = src.listFiles();
         //遍历每一个文件
         for (File file : srcFileList) {
             File newDestPath = new File(dest, file.getName());
             // 2. 先判断serverTempFilePath是否有这些文件, 根据md5
-            //不存在与源文件md5相同的文件,则拷贝
+            // 不存在与源文件md5相同的文件,则拷贝
             if (!check(file, dest)) {
                 // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
                 try {
@@ -93,52 +103,52 @@ public class PublishOceanImpl extends AbstractOcean {
     @SneakyThrows
     @Override
     protected void calculateError() {
-        // // 只获取当前目录下的nc文件, 然后依次添加新的变量
-        // List<File> files = Files.list(Paths.get(serverTempFilePath))
-        //         .filter(Files::isRegularFile)
-        //         .filter(path -> path.toString().endsWith(".nc"))
-        //         .map(Path::toFile)
-        //         .collect(Collectors.toList());
-        //
-        // String property = System.getProperties().getProperty("os.name");
-        //
-        // files.forEach(file -> {
-        //     if (property.toLowerCase().startsWith("win")) {
-        //         String scriptRelativePath = "ocean-visualization/ocean-visualization-service/src/main/java/com/csu/oceanvisualization/scripts/addErrorVariable.py";
-        //         String scriptPathPath = FilenameUtils.separatorsToSystem(projectPath + scriptRelativePath);
-        //         String commandStr = "cmd /c python " + scriptPathPath + " " + file;
-        //         CMDUtils.executeCMD(commandStr);
-        //         log.info("执行添加变量脚本: " + commandStr);
-        //         // System.out.println(commandStr);
-        //     } else {
-        //         // 执行 linux cmd
-        //         String commandStr = "python addErrorVariable.py " + file;
-        //         CMDUtils.executeCMD(commandStr);
-        //         log.info("执行添加变量脚本: " + commandStr);
-        //     }
-        // });
+        // 只获取当前目录下的nc文件, 然后依次添加新的变量
+        List<File> files = Files.list(Paths.get(serverTempFilePath))
+                .filter(Files::isRegularFile)
+                .filter(path -> path.toString().endsWith(".nc"))
+                .map(Path::toFile)
+                .collect(Collectors.toList());
+
+        String property = System.getProperties().getProperty("os.name");
+
+        files.forEach(file -> {
+            if (property.toLowerCase().startsWith("win")) {
+                String scriptRelativePath = "ocean-visualization/ocean-visualization-service/src/main/java/com/csu/oceanvisualization/scripts/addErrorVariable.py";
+                String scriptPathPath = FilenameUtils.separatorsToSystem(projectPath + scriptRelativePath);
+                String commandStr = "cmd /c python " + scriptPathPath + " " + file;
+                CMDUtils.executeCMD(commandStr);
+                log.info("执行添加变量脚本: " + commandStr);
+                // System.out.println(commandStr);
+            } else {
+                // 执行 linux cmd
+                String commandStr = "python addErrorVariable.py " + file;
+                CMDUtils.executeCMD(commandStr);
+                log.info("执行添加变量脚本: " + commandStr);
+            }
+        });
     }
 
     @Override
     protected void gdalTranslate() {
         // 遍历serverFilePath目录下的所有文件, 依次执行gdal_translate命令
-        // File ncFolder = new File(serverTempFilePath);
-        // File[] ncFilePath = ncFolder.listFiles();
-        // String property = System.getProperties().getProperty("os.name");
-        //
-        // if (ncFilePath != null) {
-        //     for (File file : ncFilePath) {
-        //         if (file.isFile()) {
-        //             if (file.getName().endsWith(".nc")) {
-        //                 try {
-        //                     GDALUtils.gdalTranslate(FilenameUtils.separatorsToSystem(file.getAbsolutePath()), serverTifFilePath);
-        //                 } catch (Exception e) {
-        //                     e.printStackTrace();
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        File ncFolder = new File(serverTempFilePath);
+        File[] ncFilePath = ncFolder.listFiles();
+        String property = System.getProperties().getProperty("os.name");
+
+        if (ncFilePath != null) {
+            for (File file : ncFilePath) {
+                if (file.isFile()) {
+                    if (file.getName().endsWith(".nc")) {
+                        try {
+                            GDALUtils.gdalTranslate(FilenameUtils.separatorsToSystem(file.getAbsolutePath()), serverTifFilePath);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+        }
     }
 
 

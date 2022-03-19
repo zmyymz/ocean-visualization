@@ -16,10 +16,14 @@ public abstract class AbstractOcean {
         traverseFile();
 
         // 2.生成两个新的变量
-        calculateError();
+        if(needCalculateError()){
+            calculateError();
+        }
 
         // 3.将nc转为tif
-        gdalTranslate();
+        if(needGdalTranslate()){
+            gdalTranslate();
+        }
 
         // 4. geoserver发布tif图层
         publishTifLayer();
@@ -27,7 +31,6 @@ public abstract class AbstractOcean {
         // 5. 清理tif文件目录
         deleteTifFile();
     }
-
 
     protected abstract void traverseFile();
 
@@ -39,6 +42,8 @@ public abstract class AbstractOcean {
 
     protected abstract void deleteTifFile();
 
+    protected abstract boolean needCalculateError();
 
+    protected abstract boolean needGdalTranslate();
 
 }
