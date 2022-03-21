@@ -69,6 +69,11 @@ public class PublishOceanImpl extends AbstractOcean {
     }
 
     @Override
+    protected boolean needPublishTifLayer() {
+        return true;
+    }
+
+    @Override
     protected void traverseFile() {
         // 1. 遍历userFilePath目录, 获取所有nc路径
         // 2. 先判断serverTempFilePath是否有这些文件, 根据md5
@@ -76,6 +81,7 @@ public class PublishOceanImpl extends AbstractOcean {
         // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
 
         // 1. 遍历userFilePath目录, 获取所有nc路径
+        log.info("开始复制海洋数据");
         File src = new File(userFilePath);
         File dest = new File(serverTempFilePath);
         if (!dest.exists()) {
@@ -92,6 +98,7 @@ public class PublishOceanImpl extends AbstractOcean {
                 // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
                 try {
                     FileUtil.copyFile(file, newDestPath);
+                    // int a = 10 / 0;
                 } catch (Exception e) {
                     e.printStackTrace();
                     throw new OceanException(20001, "复制海洋数据出现异常");
@@ -103,6 +110,7 @@ public class PublishOceanImpl extends AbstractOcean {
     @SneakyThrows
     @Override
     protected void calculateError() {
+        log.info("正在为数据添加两个变量");
         // 只获取当前目录下的nc文件, 然后依次添加新的变量
         List<File> files = Files.list(Paths.get(serverTempFilePath))
                 .filter(Files::isRegularFile)
@@ -132,6 +140,7 @@ public class PublishOceanImpl extends AbstractOcean {
     @Override
     protected void gdalTranslate() {
         // 遍历serverFilePath目录下的所有文件, 依次执行gdal_translate命令
+        log.info("开始将nc转为tif");
         File ncFolder = new File(serverTempFilePath);
         File[] ncFilePath = ncFolder.listFiles();
         String property = System.getProperties().getProperty("os.name");
@@ -158,6 +167,7 @@ public class PublishOceanImpl extends AbstractOcean {
         // 发布serverTifFilePath (/geoserver/ocean_data) 目录下的所有tif文件
         // String tifpath = "D:\\work\\ocean_project\\Ocean\\user_ocean_data";//文件路径
         // String sldPath = "D:\\work\\ocean_project\\data\\datasld";
+        log.info("开始发布tif图层");
         String tifpath = serverTifFilePath;
         String sldPath = serverStyleFilePath;
         String url = geoServerProperties.getUrl();
@@ -177,14 +187,42 @@ public class PublishOceanImpl extends AbstractOcean {
             //System.out.println(tifName.length);
             String[] tifAttr = tifName[0].split("_");
             String sldName = "";
-            if (tifAttr[0].equals("SWH"))
+            // if (tifAttr[0].equals("SWH"))
+            //     sldName = "SWH";
+            // else if (tifAttr[0].equals("SSH"))
+            //     sldName = "SSH";
+            // else if (tifAttr[0].equals("wave"))
+            //     sldName = "wave_direction";
+            // else
+            //     sldName = "temperature";
+
+            if (tifAttr[0].equals("SWH")) {
                 sldName = "SWH";
-            else if (tifAttr[0].equals("SSH"))
-                sldName = "SSH";
-            else if (tifAttr[0].equals("wave"))
+            } else if (tifAttr[0].equals("SSH")) {
+                if (tifAttr[2].equals("After")) {
+                    sldName = "SSH_Error_After";
+                    // System.out.println("After "+tif);
+                } else if (tifAttr[2].equals("Before")) {
+                    sldName = "SSH_Error_Before";
+                    // System.out.println("Before " + tif);
+                } else {
+                    // System.out.println("***" + tif);
+                    sldName = "SSH";
+                }
+            } else if (tifAttr[0].equals("wave"))
                 sldName = "wave_direction";
-            else
-                sldName = "temperature";
+            else {
+                if (tifAttr[2].equals("After")) {
+                    sldName = "temp_Error_After";
+                    // System.out.println("After "+tif);
+                } else if (tifAttr[2].equals("Before")) {
+                    sldName = "temp_Error_Before";
+                    // System.out.println("Before " + tif);
+                } else {
+                    // System.out.println("***" + tif);
+                    sldName = "temperature";
+                }
+            }
             String sldpath = sldPath + "\\" + sldName + ".sld";
             String tiffpath = tifpath + "\\" + tif;
             String dataStore = tifName[0];
@@ -221,15 +259,18 @@ public class PublishOceanImpl extends AbstractOcean {
                 gsGeoTIFFDatastoreEncoder.setUrl(new URL("file:" + tiffPath));
                 boolean createStore = manager.getStoreManager().create(workSpace, gsGeoTIFFDatastoreEncoder);
                 if (!createStore) {
-                    System.out.println("create store (TIFF文件创建状态) : " + createStore);
+                    log.info("create store (TIFF文件创建状态) : " + createStore);
+                    // System.out.println("create store (TIFF文件创建状态) : " + createStore);
                 }
                 boolean publish = publisher.publishGeoTIFF(workSpace, dataStore, layerStore, new File(tiffPath), "EPSG:4326",
                         GSResourceEncoder.ProjectionPolicy.FORCE_DECLARED, sldName, null);
                 if (!publish) {
-                    System.out.println("publish (TIFF文件发布状态) : " + publish);
+                    log.info("publish (TIFF文件发布状态) : " + publish);
+                    // System.out.println("publish (TIFF文件发布状态) : " + publish);
                 }
             } else {
-                System.out.println("数据存储已经存在了,store:" + dataStore);
+                log.info("数据存储已经存在了,store:" + dataStore);
+                // System.out.println("数据存储已经存在了,store:" + dataStore);
             }
         } catch (IOException e) {
             e.printStackTrace();

@@ -26,11 +26,14 @@ public abstract class AbstractOcean {
         }
 
         // 4. geoserver发布tif图层
-        publishTifLayer();
+        if(needPublishTifLayer()){
+            publishTifLayer();
+        }
 
         // 5. 清理tif文件目录
         deleteTifFile();
     }
+
 
     protected abstract void traverseFile();
 
@@ -45,5 +48,8 @@ public abstract class AbstractOcean {
     protected abstract boolean needCalculateError();
 
     protected abstract boolean needGdalTranslate();
+
+    protected abstract boolean needPublishTifLayer();
+
 
 }

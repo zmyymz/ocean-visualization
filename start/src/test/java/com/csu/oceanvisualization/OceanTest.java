@@ -819,5 +819,12 @@ public class OceanTest {
         System.out.println(FilenameUtils.separatorsToUnix(metaDataJsonPath));
     }
 
+    @Test
+    public void testPrefix(){
+        String file1 = "SWH_2021";
+        String file2 = "SWH_Error_Before_2021";
+        System.out.println(file1.startsWith("SWH_Error_Before"));
+    }
+
 
 }

@@ -69,12 +69,12 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         File[] srcFileList = srcPath.listFiles();
         //遍历每一个文件
         for (File file : srcFileList) {
-            //获取每一个文件的路径
-            //System.out.println(file.getCanonicalPath());
-
-            //File newDestPath = new File(destPath,file.getName());
+            // 获取每一个文件的路径
+            // System.out.println(file.getCanonicalPath());
+            // File newDestPath = new File(destPath,file.getName());
             try {
                 copyFolder(file, destPath);
+                // int a = 10 / 0;
             } catch (Exception e) {
                 // e.printStackTrace();
                 throw new OceanException(20001, "台风数据复制出现异常");
