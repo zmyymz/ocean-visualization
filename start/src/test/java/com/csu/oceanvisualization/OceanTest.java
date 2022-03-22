@@ -4,8 +4,10 @@ import com.csu.oceanvisualization.entity.Feature;
 import com.csu.oceanvisualization.entity.GeoJsonFeature;
 import com.csu.oceanvisualization.entity.Geometry;
 import com.csu.oceanvisualization.entity.TyphoonProperty;
+import com.csu.oceanvisualization.servicebase.exceptionhandler.OceanException;
 import com.csu.oceanvisualization.utils.CMDUtils;
 import com.csu.oceanvisualization.utils.DateUtils;
+import com.csu.oceanvisualization.utils.FileUtil;
 import com.csu.oceanvisualization.utils.GDALUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;
@@ -812,7 +814,7 @@ public class OceanTest {
     }
 
     @Test
-    public void testFilePath(){
+    public void testFilePath() {
         String serverFilePropertyPath = "D:/a/";
         String metaDataJsonPath = serverFilePropertyPath + "typhoonMetaData.json";
         System.out.println(FilenameUtils.separatorsToSystem(metaDataJsonPath));
@@ -820,10 +822,32 @@ public class OceanTest {
     }
 
     @Test
-    public void testPrefix(){
+    public void testPrefix() {
         String file1 = "SWH_2021";
         String file2 = "SWH_Error_Before_2021";
         System.out.println(file1.startsWith("SWH_Error_Before"));
+    }
+
+    @Test
+    public void testCopyStyleFile() {
+        String userStyleFilePath = "D:/a/";
+        String serverStyleFilePath = "D:/b/";
+
+        File srcPath = new File(userStyleFilePath);
+        File destPath = new File(serverStyleFilePath);
+        if (!destPath.exists()) {
+            destPath.mkdir();
+        }
+        File[] srcFileList = srcPath.listFiles();
+        for (File file : srcFileList) {
+            try {
+                FileUtil.copyFolder(file, destPath);
+                // int a = 10 / 0;
+            } catch (Exception e) {
+                // e.printStackTrace();
+                throw new OceanException(20001, "样式文件复制出现异常");
+            }
+        }
     }
 
 

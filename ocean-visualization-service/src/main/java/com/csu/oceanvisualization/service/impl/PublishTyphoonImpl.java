@@ -73,7 +73,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
             // System.out.println(file.getCanonicalPath());
             // File newDestPath = new File(destPath,file.getName());
             try {
-                copyFolder(file, destPath);
+                FileUtil.copyFolder(file, destPath);
                 // int a = 10 / 0;
             } catch (Exception e) {
                 // e.printStackTrace();
@@ -369,38 +369,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     }
 
 
-    /**
-     * 拷贝文件夹
-     *
-     * @param srcPath  源路径
-     * @param destPath 目的路径
-     * @throws Exception
-     */
-    public static void copyFolder(File srcPath, File destPath) throws Exception {
-        //判断是否是目录
-        //若是目录,则递归
-        if (srcPath.isDirectory()) {
-            //获取源路径下某个目录的名称
-            String srcPathName = srcPath.getName();
-            //在目的路径下创建新的目录
-            File newDestPath = new File(destPath, srcPathName);
-            //判断目的路径下该目录是否已经被创建
-            if (!newDestPath.exists()) {
-                newDestPath.mkdir();
-                //获取源路径下所有的目录及文件
-                File[] allPathList = srcPath.listFiles();
-                for (File file : allPathList) {
-                    //进行递归调用
-                    copyFolder(file, newDestPath);
-                }
-            }
-        }
-        //若是文件则直接拷贝
-        else {
-            File newDestPath = new File(destPath, srcPath.getName());
-            FileUtil.copyFile(srcPath, newDestPath);
-        }
-    }
+
 
 
 }

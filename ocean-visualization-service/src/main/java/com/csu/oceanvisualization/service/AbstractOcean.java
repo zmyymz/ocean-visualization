@@ -15,6 +15,9 @@ public abstract class AbstractOcean {
         // 1.文件目录处理
         traverseFile();
 
+        // 复制样式文件
+        copyStyleFiles();
+
         // 2.生成两个新的变量
         if(needCalculateError()){
             calculateError();
@@ -35,7 +38,10 @@ public abstract class AbstractOcean {
     }
 
 
+
     protected abstract void traverseFile();
+
+    protected abstract void copyStyleFiles();
 
     protected abstract void calculateError();
 

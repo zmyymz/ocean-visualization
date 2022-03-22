@@ -52,6 +52,9 @@ public class PublishOceanImpl extends AbstractOcean {
     @Value("${com.csu.projectPath}")
     private String projectPath;
 
+    @Value("${com.csu.ocean.userstyle-path}")
+    private String userStyleFilePath;
+
     @Value("${com.csu.typhoon.stylefile-path}")
     private String serverStyleFilePath;
 
@@ -89,21 +92,41 @@ public class PublishOceanImpl extends AbstractOcean {
         }
         // 获取源路径下所有文件
         File[] srcFileList = src.listFiles();
-        //遍历每一个文件
-        for (File file : srcFileList) {
-            File newDestPath = new File(dest, file.getName());
-            // 2. 先判断serverTempFilePath是否有这些文件, 根据md5
-            // 不存在与源文件md5相同的文件,则拷贝
-            if (!check(file, dest)) {
-                // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
-                try {
+        try {
+            //遍历每一个文件
+            assert srcFileList != null;
+            for (File file : srcFileList) {
+                File newDestPath = new File(dest, file.getName());
+                // 2. 先判断serverTempFilePath是否有这些文件, 根据md5
+                // 不存在与源文件md5相同的文件,则拷贝
+                if (!check(file, dest)) {
+                    // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
                     FileUtil.copyFile(file, newDestPath);
                     // int a = 10 / 0;
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    throw new OceanException(20001, "复制海洋数据出现异常");
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new OceanException(20001, "复制海洋数据出现异常");
+        }
+    }
+
+    @Override
+    protected void copyStyleFiles() {
+        log.info("开始复制样式文件");
+        File srcPath = new File(userStyleFilePath);
+        File destPath = new File(serverStyleFilePath);
+        if (!destPath.exists()) {
+            destPath.mkdir();
+        }
+        File[] srcFileList = srcPath.listFiles();
+        try {
+            assert srcFileList != null;
+            for (File file : srcFileList) {
+                FileUtil.copyFolder(file, destPath);
+            }
+        } catch (Exception e) {
+            throw new OceanException(20001, "样式文件复制出现异常");
         }
     }
 
@@ -288,7 +311,7 @@ public class PublishOceanImpl extends AbstractOcean {
      * @throws MalformedURLException
      */
     private void createWorkspace(String url, String username, String password, String workSpace) throws MalformedURLException {
-        //url = http://localhost:8089/geoserver
+        // url = http://localhost:8089/geoserver
         URL u = new URL(url);
         GeoServerRESTManager manager = new GeoServerRESTManager(u, username, password);
         GeoServerRESTPublisher publisher = manager.getPublisher();
