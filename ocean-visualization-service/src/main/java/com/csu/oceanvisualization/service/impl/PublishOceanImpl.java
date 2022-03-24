@@ -142,18 +142,18 @@ public class PublishOceanImpl extends AbstractOcean {
                 .collect(Collectors.toList());
 
         String property = System.getProperties().getProperty("os.name");
+        String scriptRelativePath = "ocean-visualization/ocean-visualization-service/src/main/java/com/csu/oceanvisualization/scripts/addErrorVariable.py";
+        String scriptPathPath = FilenameUtils.separatorsToSystem(projectPath + scriptRelativePath);
 
         files.forEach(file -> {
             if (property.toLowerCase().startsWith("win")) {
-                String scriptRelativePath = "ocean-visualization/ocean-visualization-service/src/main/java/com/csu/oceanvisualization/scripts/addErrorVariable.py";
-                String scriptPathPath = FilenameUtils.separatorsToSystem(projectPath + scriptRelativePath);
                 String commandStr = "cmd /c python " + scriptPathPath + " " + file;
                 CMDUtils.executeCMD(commandStr);
                 log.info("执行添加变量脚本: " + commandStr);
                 // System.out.println(commandStr);
             } else {
                 // 执行 linux cmd
-                String commandStr = "python addErrorVariable.py " + file;
+                String commandStr = "python " + scriptPathPath + " " + file;
                 CMDUtils.executeCMD(commandStr);
                 log.info("执行添加变量脚本: " + commandStr);
             }
@@ -232,9 +232,15 @@ public class PublishOceanImpl extends AbstractOcean {
                     // System.out.println("***" + tif);
                     sldName = "SSH";
                 }
-            } else if (tifAttr[0].equals("wave"))
-                sldName = "wave_direction";
-            else {
+            } else if (tifAttr[0].contains("wave")) {
+                if (tifAttr[2].contains("forecast")) {
+                    sldName = "wave_direction_reanalysis_forecast";
+                } else if (tifAttr[2].contains("predict")) {
+                    sldName = "wave_direction_reanalysis_predict";
+                } else {
+                    sldName = "wave_direction";
+                }
+            } else {
                 if (tifAttr[2].equals("After")) {
                     sldName = "temp_Error_After";
                     // System.out.println("After "+tif);

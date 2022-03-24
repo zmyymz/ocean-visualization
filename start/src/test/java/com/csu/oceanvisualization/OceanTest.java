@@ -50,6 +50,10 @@ import java.util.stream.Collectors;
  */
 // @SpringBootTest
 public class OceanTest {
+    /**
+     * Netcdf读取测试
+     * @throws IOException
+     */
     @Test
     public void test01() throws IOException {
         // 1° 设置原始文件路径+转存文件路径
@@ -115,6 +119,10 @@ public class OceanTest {
     }
 
 
+    /**
+     * 计算nc文件当前时间
+     * @throws ParseException
+     */
     @Test
     public void test03() throws ParseException {
         // wave_direction 时间范围
@@ -848,6 +856,12 @@ public class OceanTest {
                 throw new OceanException(20001, "样式文件复制出现异常");
             }
         }
+    }
+
+    @Test
+    public void testCode(){
+        String code = "0042567AV433";
+
     }
 
 
