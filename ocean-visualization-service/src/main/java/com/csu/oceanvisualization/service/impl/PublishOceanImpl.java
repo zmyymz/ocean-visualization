@@ -26,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
@@ -204,61 +205,59 @@ public class PublishOceanImpl extends AbstractOcean {
             throw new OceanException(20001, "Geoserver创建工作空间异常");
         }
         String[] tifArray = FileUtil.getFileName(tifpath);//所有tif文件
-        for (String tif : tifArray) {
-            //System.out.println(tif);
-            String[] tifName = tif.split("\\.");
-            //System.out.println(tifName.length);
-            String[] tifAttr = tifName[0].split("_");
-            String sldName = "";
-            // if (tifAttr[0].equals("SWH"))
-            //     sldName = "SWH";
-            // else if (tifAttr[0].equals("SSH"))
-            //     sldName = "SSH";
-            // else if (tifAttr[0].equals("wave"))
-            //     sldName = "wave_direction";
-            // else
-            //     sldName = "temperature";
 
-            if (tifAttr[0].equals("SWH")) {
-                sldName = "SWH";
-            } else if (tifAttr[0].equals("SSH")) {
-                if (tifAttr[2].equals("After")) {
-                    sldName = "SSH_Error_After";
-                    // System.out.println("After "+tif);
-                } else if (tifAttr[2].equals("Before")) {
-                    sldName = "SSH_Error_Before";
-                    // System.out.println("Before " + tif);
-                } else {
-                    // System.out.println("***" + tif);
-                    sldName = "SSH";
+        long start = System.nanoTime();
+        int processorsNum = Runtime.getRuntime().availableProcessors();
+        ThreadPoolExecutor executor = new ThreadPoolExecutor(processorsNum, processorsNum * 2, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>(1000), new ThreadPoolExecutor.AbortPolicy());
+        for (String tif : tifArray) {
+            executor.execute(new Runnable() {
+                @SneakyThrows
+                @Override
+                public void run() {
+                    String[] tifName = tif.split("\\.");
+                    String[] tifAttr = tifName[0].split("_");
+                    String sldName = "";
+                    if (tifAttr[0].equals("SWH")) {
+                        sldName = "SWH";
+                    } else if (tifAttr[0].equals("SSH")) {
+                        if (tifAttr[2].equals("After")) {
+                            sldName = "SSH_Error_After";
+                        } else if (tifAttr[2].equals("Before")) {
+                            sldName = "SSH_Error_Before";
+                        } else {
+                            sldName = "SSH";
+                        }
+                    } else if (tifAttr[0].contains("wave")) {
+                        if (tifAttr[2].contains("forecast")) {
+                            sldName = "wave_direction_reanalysis_forecast";
+                        } else if (tifAttr[2].contains("predict")) {
+                            sldName = "wave_direction_reanalysis_predict";
+                        } else {
+                            sldName = "wave_direction";
+                        }
+                    } else {
+                        if (tifAttr[2].equals("After")) {
+                            sldName = "temp_Error_After";
+                        } else if (tifAttr[2].equals("Before")) {
+                            sldName = "temp_Error_Before";
+                        } else {
+                            sldName = "temperature";
+                        }
+                    }
+                    String sldpath = sldPath + "\\" + sldName + ".sld";
+                    String tiffpath = tifpath + "\\" + tif;
+                    String dataStore = tifName[0];
+                    String layerStore = tifName[0];
+                    log.info("发布带有样式的tif图层");
+                    PublishSldTiffData(url, username, password, workSpace, sldpath, sldName, tiffpath, dataStore, layerStore);
                 }
-            } else if (tifAttr[0].contains("wave")) {
-                if (tifAttr[2].contains("forecast")) {
-                    sldName = "wave_direction_reanalysis_forecast";
-                } else if (tifAttr[2].contains("predict")) {
-                    sldName = "wave_direction_reanalysis_predict";
-                } else {
-                    sldName = "wave_direction";
-                }
-            } else {
-                if (tifAttr[2].equals("After")) {
-                    sldName = "temp_Error_After";
-                    // System.out.println("After "+tif);
-                } else if (tifAttr[2].equals("Before")) {
-                    sldName = "temp_Error_Before";
-                    // System.out.println("Before " + tif);
-                } else {
-                    // System.out.println("***" + tif);
-                    sldName = "temperature";
-                }
-            }
-            String sldpath = sldPath + "\\" + sldName + ".sld";
-            String tiffpath = tifpath + "\\" + tif;
-            String dataStore = tifName[0];
-            String layerStore = tifName[0];
-            log.info("发布带有样式的tif图层");
-            PublishSldTiffData(url, username, password, workSpace, sldpath, sldName, tiffpath, dataStore, layerStore);
+            });
         }
+        executor.shutdown();
+        while (!executor.isTerminated()) {
+        }
+        long end = System.nanoTime();
+        log.info("Finished all threads, 共耗时: " + String.valueOf(end - start));
     }
 
     /**
@@ -350,8 +349,9 @@ public class PublishOceanImpl extends AbstractOcean {
             File sldFile = new File(sldPath);
             boolean b1 = styleManager.publishStyleInWorkspace(workSpace, sldFile, sldName);
             if (!b1) {
-                System.out.println("新增样式失败");
-                throw new OceanException(20001, "新增样式失败");
+                log.warn("新增样式失败");
+                // System.out.println("新增样式失败");
+                // throw new OceanException(20001, "新增样式失败");
             }
         }
     }
