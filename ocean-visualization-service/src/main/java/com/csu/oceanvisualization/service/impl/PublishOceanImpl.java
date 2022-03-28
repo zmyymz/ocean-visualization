@@ -64,12 +64,12 @@ public class PublishOceanImpl extends AbstractOcean {
 
     @Override
     protected boolean needGdalTranslate() {
-        return false;
+        return true;
     }
 
     @Override
     protected boolean needCalculateError() {
-        return false;
+        return true;
     }
 
     @Override
@@ -88,6 +88,7 @@ public class PublishOceanImpl extends AbstractOcean {
         log.info("开始复制海洋数据");
         File src = new File(userFilePath);
         File dest = new File(serverTempFilePath);
+        System.out.println(userFilePath);
         if (!dest.exists()) {
             dest.mkdir();
         }
@@ -257,7 +258,7 @@ public class PublishOceanImpl extends AbstractOcean {
         while (!executor.isTerminated()) {
         }
         long end = System.nanoTime();
-        log.info("Finished all threads, 共耗时: " + String.valueOf(end - start));
+        log.info("Finished all threads, 共耗时: " + String.valueOf(end - start) + "ns");
     }
 
     /**

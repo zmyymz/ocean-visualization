@@ -1,10 +1,12 @@
 FROM openjdk:8-jdk-slim
-FROM python:3.7
+FROM conda/miniconda3
+FROM osgeo/gdal
 
 LABEL maintainer=csu
 
-RUN pip install -i https://pypi.doubanio.com/simple/ netCDF4==1.3.1
-RUN pip install -i https://pypi.doubanio.com/simple/ numpy==1.21.5
+RUN conda install netCDF4==1.3.1
+
+COPY . .
 
 COPY target/*.jar /app.jar
 

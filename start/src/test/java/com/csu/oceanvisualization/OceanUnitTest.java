@@ -18,12 +18,12 @@ import lombok.SneakyThrows;
 import org.apache.commons.io.FilenameUtils;
 import org.assertj.core.util.Lists;
 import org.json.JSONObject;
+import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 import org.springframework.util.StopWatch;
 import ucar.ma2.Array;
 import ucar.nc2.NetcdfFile;
 import ucar.nc2.Variable;
-
 
 import java.io.*;
 import java.math.BigInteger;
@@ -36,7 +36,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,10 +52,9 @@ import java.util.stream.Collectors;
  * @date 2022/1/28 14:46
  */
 // @SpringBootTest
-public class OceanTest {
+public class OceanUnitTest {
     /**
      * Netcdf读取测试
-     *
      * @throws IOException
      */
     @Test
@@ -122,69 +124,18 @@ public class OceanTest {
 
     /**
      * 计算nc文件当前时间
-     *
      * @throws ParseException
      */
     @Test
     public void test03() throws ParseException {
         // wave_direction 时间范围
-        List<Integer> timeRangeList = Arrays.asList(1054176, 1054177, 1054178, 1054179, 1054180, 1054181, 1054182);
+        List<Integer> timeRangeList = Arrays.asList(1054176);
         ArrayList<String> timeResultList = Lists.newArrayList();
-        // HashSet<String> set = new HashSet<>();
         for (Integer time : timeRangeList) {
             String nextDate = DateUtils.getNextDate("1900-01-01 00:00:0:0", time, Calendar.HOUR_OF_DAY, "yyyy-MM-dd HH:mm:ss");
             timeResultList.add(nextDate);
-            // set.add(nextDate);
         }
-        System.out.println(timeResultList);
-
-        // SWH 时间范围
-        // List<Integer> timeRangeList = Arrays.asList(59310, 59311, 59312, 59313, 59314);
-        // ArrayList<String> timeResultList = Lists.newArrayList();
-        // // HashSet<String> set = new HashSet<>();
-        // for (Integer time : timeRangeList) {
-        //     String nextDate = DateUtils.getNextDate("1858-11-17", time, Calendar.DAY_OF_MONTH, "yyyy-MM-dd");
-        //     timeResultList.add(nextDate);
-        //     // set.add(nextDate);
-        // }
-        // System.out.println(timeResultList);
-
-
-        // 台风数据测试
-        // String nextDate = getNextDate("1900-01-01 00:00:0.0", 692520, Calendar.HOUR_OF_DAY, "yyyy-MM-dd HH:mm:ss");
-        // System.out.println(nextDate);
-
-
-        // System.out.println(getStringToDate("1900-01-01 00:00:0.0"));
-        //
-        // String dateToString = getDateToString(-2209017600000L);
-        // System.out.println(dateToString);
-
-
-        // wave_direction
-        // for (Integer time : timeRangeList) {
-        //     String nextDate = getNextDate("1900-01-01 00:00:0.0", time, Calendar.HOUR_OF_DAY, "yyyy-MM-dd HH:mm:ss");
-        //     timeResultList.add(nextDate);
-        //     set.add(nextDate);
-        // }
-        // System.out.println(timeResultList);
-        // System.out.println(set);
-
-
-        // String curDate = getNextDate("1858-11-17", 59310, Calendar.DATE, "yyyy-MM-dd");
-        // 0000-01-01   738405
-        // String curDate = getNextDate("0000-01-01", 738405, Calendar.DATE, "yyyy-MM-dd");
-
-        // System.out.println(curDate);
-
-
-        // String str1 = "2013-08-11";
-        // String str2 = "2013-08-15";
-        // SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-        // Date d1 = simpleDateFormat.parse(str1);
-        // Date d2 = simpleDateFormat.parse(str2);
-        // int day = daysOfTwo(d1, d2);
-        // System.out.println(day);
+        Assert.assertEquals(timeResultList.get(0),"2020-04-05 00:00:00");
     }
 
     /**
@@ -861,23 +812,9 @@ public class OceanTest {
     }
 
     @Test
-    public void testCode() {
-        Long startTime = System.currentTimeMillis();
-        int sum = 0;
-        for (int i = 0; i < 10000; i++) {
-            sum += i;
-        }
-        System.out.println(sum);
-        Long endTime = System.currentTimeMillis();
+    public void testCode(){
+        String code = "0042567AV433";
 
-        Long tempTime = (endTime - startTime);
-
-        System.out.println("花费时间：" +
-                (((tempTime / 86400000) > 0) ? ((tempTime / 86400000) + "d") : "") +
-                ((((tempTime / 86400000) > 0) || ((tempTime % 86400000 / 3600000) > 0)) ? ((tempTime % 86400000 / 3600000) + "h") : ("")) +
-                ((((tempTime / 3600000) > 0) || ((tempTime % 3600000 / 60000) > 0)) ? ((tempTime % 3600000 / 60000) + "m") : ("")) +
-                ((((tempTime / 60000) > 0) || ((tempTime % 60000 / 1000) > 0)) ? ((tempTime % 60000 / 1000) + "s") : ("")) +
-                ((tempTime % 1000) + "ms"));
     }
 
 

@@ -132,6 +132,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         // String jsonFilePath = "D:\\work\\ocean_project\\json\\ww.json";
 
         log.info("开始发布台风图层");
+        long start = System.nanoTime();
         String sldPath = serverStyleFilePath + "wind_style.sld";
         String ncpath = serverTempFilePath;
         String ncurl = "file:/" + serverTempFilePath;
@@ -181,6 +182,8 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
             }
         }
         log.info("发布台风图层完成");
+        long end = System.nanoTime();
+        log.info("Finished all threads, 共耗时: " + String.valueOf(end - start) + "ns");
     }
 
 
