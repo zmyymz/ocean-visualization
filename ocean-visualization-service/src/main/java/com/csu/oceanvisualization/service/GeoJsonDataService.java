@@ -12,5 +12,5 @@ import java.util.concurrent.ExecutionException;
  */
 
 public interface GeoJsonDataService {
-    public String getGeoJsonData(String fourOceans, String tpSeq) throws ExecutionException;
+    String getGeoJsonData(String fourOceans, String tpSeq) throws ExecutionException;
 }
