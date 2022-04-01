@@ -35,6 +35,8 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
@@ -861,23 +863,48 @@ public class OceanTest {
     }
 
     @Test
-    public void testCode() {
-        Long startTime = System.currentTimeMillis();
+    public void testCode() throws InterruptedException {
+        Instant startTime = Instant.now();
         int sum = 0;
-        for (int i = 0; i < 10000; i++) {
+        for (int i = 0; i < 1000000; i++) {
             sum += i;
         }
-        System.out.println(sum);
-        Long endTime = System.currentTimeMillis();
+        Instant endTime = Instant.now();
 
-        Long tempTime = (endTime - startTime);
+        long elapsedTime = Duration.between(startTime, endTime).toNanos();
+        System.out.println("Elapsed time in milli seconds: " + elapsedTime);
 
-        System.out.println("花费时间：" +
-                (((tempTime / 86400000) > 0) ? ((tempTime / 86400000) + "d") : "") +
-                ((((tempTime / 86400000) > 0) || ((tempTime % 86400000 / 3600000) > 0)) ? ((tempTime % 86400000 / 3600000) + "h") : ("")) +
-                ((((tempTime / 3600000) > 0) || ((tempTime % 3600000 / 60000) > 0)) ? ((tempTime % 3600000 / 60000) + "m") : ("")) +
-                ((((tempTime / 60000) > 0) || ((tempTime % 60000 / 1000) > 0)) ? ((tempTime % 60000 / 1000) + "s") : ("")) +
-                ((tempTime % 1000) + "ms"));
+
+        // calculate elapsed time in milli seconds
+        // Long startTime = Instant.now().toEpochMilli();
+        // int sum = 0;
+        // for (int i = 0; i < 1000000; i++) {
+        //     sum += i;
+        // }
+        // TimeUnit.SECONDS.sleep(2);
+        // Long endTime = Instant.now().toEpochMilli();
+        // long elapsedTime = endTime - startTime;
+        // System.out.println("Elapsed time in milli seconds: " + elapsedTime);
+
+
+        // calculate elapsed time in seconds
+        // Long stTimeInSec = Instant.now().getEpochSecond();
+        // int sum = 0;
+        // for (int i = 0; i < 1000000; i++) {
+        //     sum += i;
+        // }
+        // TimeUnit.SECONDS.sleep(2);
+        // Long endTimeInSec = Instant.now().getEpochSecond();
+        //
+        // long elapsedTime = endTimeInSec - stTimeInSec;
+        // System.out.println("Elapsed time in seconds: " + elapsedTime);
+
+        // System.out.println("花费时间：" +
+        //         (((tempTime / 86400000) > 0) ? ((tempTime / 86400000) + "d") : "") +
+        //         ((((tempTime / 86400000) > 0) || ((tempTime % 86400000 / 3600000) > 0)) ? ((tempTime % 86400000 / 3600000) + "h") : ("")) +
+        //         ((((tempTime / 3600000) > 0) || ((tempTime % 3600000 / 60000) > 0)) ? ((tempTime % 3600000 / 60000) + "m") : ("")) +
+        //         ((((tempTime / 60000) > 0) || ((tempTime % 60000 / 1000) > 0)) ? ((tempTime % 60000 / 1000) + "s") : ("")) +
+        //         ((tempTime % 1000) + "ms"));
     }
 
 

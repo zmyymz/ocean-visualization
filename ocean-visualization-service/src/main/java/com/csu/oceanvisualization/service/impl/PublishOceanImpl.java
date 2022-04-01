@@ -317,17 +317,28 @@ public class PublishOceanImpl extends AbstractOcean {
      * @throws MalformedURLException
      */
     private void createWorkspace(String url, String username, String password, String workSpace) throws MalformedURLException {
-        // url = http://localhost:8089/geoserver
         URL u = new URL(url);
         GeoServerRESTManager manager = new GeoServerRESTManager(u, username, password);
         GeoServerRESTPublisher publisher = manager.getPublisher();
         List<String> workspaces = manager.getReader().getWorkspaceNames();
-        if (!workspaces.contains(workSpace)) {
-            boolean createws = publisher.createWorkspace(workSpace);
-            System.out.println("create ws : " + createws);
-        } else {
-            System.out.println("workspace已经存在了, workSpace :" + workSpace);
+        if (workspaces.contains(workSpace)) {
+            // 删除工作空间
+            publisher.removeWorkspace(workSpace, true);
+            log.info("workspace已经存在了删除, workSpace :" + workSpace);
         }
+        boolean createws = publisher.createWorkspace(workSpace);
+        log.info("create ws : " + createws);
+
+        // URL u = new URL(url);
+        // GeoServerRESTManager manager = new GeoServerRESTManager(u, username, password);
+        // GeoServerRESTPublisher publisher = manager.getPublisher();
+        // List<String> workspaces = manager.getReader().getWorkspaceNames();
+        // if (!workspaces.contains(workSpace)) {
+        //     boolean createws = publisher.createWorkspace(workSpace);
+        //     System.out.println("create ws : " + createws);
+        // } else {
+        //     System.out.println("workspace已经存在了, workSpace :" + workSpace);
+        // }
     }
 
 
