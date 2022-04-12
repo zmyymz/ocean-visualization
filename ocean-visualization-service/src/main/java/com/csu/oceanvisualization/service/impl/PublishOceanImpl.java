@@ -94,6 +94,7 @@ public class PublishOceanImpl extends AbstractOcean {
         }
         // 获取源路径下所有文件
         File[] srcFileList = src.listFiles();
+        System.out.println(srcFileList.length);
         try {
             //遍历每一个文件
             assert srcFileList != null;
@@ -193,6 +194,7 @@ public class PublishOceanImpl extends AbstractOcean {
         // String tifpath = "D:\\work\\ocean_project\\Ocean\\user_ocean_data";//文件路径
         // String sldPath = "D:\\work\\ocean_project\\data\\datasld";
         log.info("开始发布tif图层");
+        log.info("Start publish tif layer");
         String tifpath = serverTifFilePath;
         String sldPath = serverStyleFilePath;
         String url = geoServerProperties.getUrl();
@@ -245,11 +247,12 @@ public class PublishOceanImpl extends AbstractOcean {
                             sldName = "temperature";
                         }
                     }
-                    String sldpath = sldPath + "\\" + sldName + ".sld";
-                    String tiffpath = tifpath + "\\" + tif;
+                    String sldpath = sldPath  + sldName + ".sld";
+                    String tiffpath = tifpath + tif;
                     String dataStore = tifName[0];
                     String layerStore = tifName[0];
                     log.info("发布带有样式的tif图层");
+                    log.info("Start publish tif layer with style");
                     PublishSldTiffData(url, username, password, workSpace, sldpath, sldName, tiffpath, dataStore, layerStore);
                 }
             });
@@ -302,7 +305,8 @@ public class PublishOceanImpl extends AbstractOcean {
                 // System.out.println("数据存储已经存在了,store:" + dataStore);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            throw new OceanException(20001, "PublishSldTiffData: Network Error");
         }
     }
 

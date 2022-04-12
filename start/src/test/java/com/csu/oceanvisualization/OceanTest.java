@@ -194,7 +194,7 @@ public class OceanTest {
      */
     @Test
     public void testTimeStamps() {
-        System.out.println(DateUtils.getDateToString(1586059200000L));
+        System.out.println(DateUtils.getDateToString(1560044264001L));
     }
 
     /**
@@ -831,6 +831,11 @@ public class OceanTest {
         String metaDataJsonPath = serverFilePropertyPath + "typhoonMetaData.json";
         System.out.println(FilenameUtils.separatorsToSystem(metaDataJsonPath));
         System.out.println(FilenameUtils.separatorsToUnix(metaDataJsonPath));
+
+        String path = "/home/ocean-visualization-parent/geoserver/stylefile/\\wave_direction.sld";
+        System.out.println(FilenameUtils.separatorsToUnix(path));
+
+
     }
 
     @Test

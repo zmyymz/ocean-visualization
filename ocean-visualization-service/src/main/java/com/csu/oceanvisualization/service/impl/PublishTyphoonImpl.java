@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.Base64;
 import java.util.HashMap;
@@ -132,6 +133,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         // String jsonFilePath = "D:\\work\\ocean_project\\json\\ww.json";
 
         log.info("开始发布台风图层");
+        log.info("Start publish typhoon layer");
         long start = System.nanoTime();
         String sldPath = serverStyleFilePath + "wind_style.sld";
         String ncpath = serverTempFilePath;
@@ -182,6 +184,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
             }
         }
         log.info("发布台风图层完成");
+        log.info("Finish publish typhoon layer");
         long end = System.nanoTime();
         log.info("Finished all threads, 共耗时: " + String.valueOf(end - start) + "ns");
     }
@@ -201,14 +204,14 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         }
     }
 
-    public void uploadNcData(String urln, String username, String password, String storename, String workspace, String filename) throws IOException {
+    public void uploadNcData(String urln, String username, String password, String storename, String workspace, String filename) {
         // storename 存储数据名称 workspace 存储工作空间 filename 本地文件地址
         // 将本地nc文件(地址filename) 存储在workplace 中命名为storename
         // "file:/D:/work/ocean_project/typhoon_data/typhoon_data/WP_solo/data_seq1/tp_1_pl.nc"
         // "http://localhost:8089/geoserver/rest/workspaces/cite/coveragestores
         // String urlg = "http://localhost:8089/geoserver";
         // createWorkspace(urlg,username,password,workspace);
-        log.info("uploadNcData");
+        log.info("Start uploadNcData by http");
         Map<String, Object> map = new HashMap<String, Object>();
         Map<String, Object> map1 = new HashMap<String, Object>();
         Map<String, Object> map2 = new HashMap<String, Object>();
@@ -224,23 +227,29 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
 
         // String username = "admin"; //用户名
         // String password = "geoserver";//密码
-        URL url = new URL(urln);//访问的geoserver网址
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();//创建连接
-        String author = "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
-        connection.setRequestProperty("Authorization", author);
-        connection.setRequestMethod("POST");
-        connection.setDoOutput(true);
-        connection.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
-        connection.connect();
-        // 发送
-        OutputStream out = new DataOutputStream(connection.getOutputStream());
-        // 写入请求的字符串
-        // System.out.println(json.toString());
-        out.write((json.toString()).getBytes("UTF-8"));
-        out.flush();
-        out.close();
+        URL url = null;//访问的geoserver网址
+        try {
+            url = new URL(urln);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();//创建连接
+            String author = "Basic " + Base64.getEncoder().encodeToString((username + ":" + password).getBytes());
+            connection.setRequestProperty("Authorization", author);
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            connection.setRequestProperty("Content-Type", "application/json;charset=UTF-8");
+            connection.connect();
+            // 发送
+            OutputStream out = new DataOutputStream(connection.getOutputStream());
+            // 写入请求的字符串
+            // System.out.println(json.toString());
+            out.write((json.toString()).getBytes("UTF-8"));
+            out.flush();
+            out.close();
+            System.out.println(connection.getResponseCode());
+        } catch (IOException e) {
+            // e.printStackTrace();
+            throw new OceanException(20001, "uploadNcData: Network Error");
+        }
 
-        System.out.println(connection.getResponseCode());
     }
 
     public void createView(String urln, String username, String password, String jsonFilePath, String viewname, String workspace) throws IOException {
@@ -370,9 +379,6 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         out.close();
         System.out.println(connection.getResponseCode());
     }
-
-
-
 
 
 }
