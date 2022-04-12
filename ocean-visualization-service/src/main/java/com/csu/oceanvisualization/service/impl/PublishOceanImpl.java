@@ -167,6 +167,7 @@ public class PublishOceanImpl extends AbstractOcean {
     protected void gdalTranslate() {
         // 遍历serverFilePath目录下的所有文件, 依次执行gdal_translate命令
         log.info("开始将nc转为tif");
+        log.info("Start nc -> tif");
         File ncFolder = new File(serverTempFilePath);
         File[] ncFilePath = ncFolder.listFiles();
         String property = System.getProperties().getProperty("os.name");
@@ -247,8 +248,10 @@ public class PublishOceanImpl extends AbstractOcean {
                             sldName = "temperature";
                         }
                     }
-                    String sldpath = sldPath  + sldName + ".sld";
+                    String sldpath = sldPath + sldName + ".sld";
                     String tiffpath = tifpath + tif;
+                    System.out.println(sldpath);
+                    System.out.println(tiffpath);
                     String dataStore = tifName[0];
                     String layerStore = tifName[0];
                     log.info("发布带有样式的tif图层");
@@ -305,7 +308,7 @@ public class PublishOceanImpl extends AbstractOcean {
                 // System.out.println("数据存储已经存在了,store:" + dataStore);
             }
         } catch (IOException e) {
-            // e.printStackTrace();
+            e.printStackTrace();
             throw new OceanException(20001, "PublishSldTiffData: Network Error");
         }
     }

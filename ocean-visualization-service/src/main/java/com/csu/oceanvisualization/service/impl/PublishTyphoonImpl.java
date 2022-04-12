@@ -313,6 +313,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     }
 
     public String loadJson(String url, String username, String password) throws IOException {
+        log.info("loadJson");
         StringBuilder json = new StringBuilder();
         URL urlObj = new URL(url);
         HttpURLConnection connection = (HttpURLConnection) urlObj.openConnection();
@@ -333,6 +334,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
 
     public void addStyle(String sldName, String sldPath, String username, String password, String workSpace) throws MalformedURLException {
         log.info("为台风添加样式");
+        log.info("addStyle for typhoon");
         URL u = new URL(geoServerProperties.getUrl());
         GeoServerRESTManager manager = new GeoServerRESTManager(u, username, password);
         GeoServerRESTStyleManager styleManager = manager.getStyleManager();
@@ -349,6 +351,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     public void addStyleForView(String url1, String url2, String workspace, String username, String password, String sldName) throws IOException {
         // String url ="http://localhost:8089/geoserver/rest/layers/netcdfView.json";
         // String url2 = "http://localhost:8089/geoserver/rest/layers/netcdfView";
+        log.info("addStyleForView");
         String geoServerUrl = geoServerProperties.getUrl();
         String json = loadJson(url1, username, password);
         System.out.println(json);
