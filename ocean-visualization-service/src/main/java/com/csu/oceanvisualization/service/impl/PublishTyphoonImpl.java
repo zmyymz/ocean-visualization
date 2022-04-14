@@ -42,6 +42,9 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     @Value("${com.csu.typhoon.userfile-path}")
     private String userFilePath;
 
+    @Value("${com.csu.ocean.userstyle-path}")
+    private String userStyleFilePath;
+
     @Value("${com.csu.typhoon.serverfile-path}")
     private String serverTempFilePath;
 
@@ -80,6 +83,25 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
                 // e.printStackTrace();
                 throw new OceanException(20001, "台风数据复制出现异常");
             }
+        }
+    }
+
+    @Override
+    protected void copyStyleFiles() {
+        log.info("开始复制样式文件");
+        File srcPath = new File(userStyleFilePath);
+        File destPath = new File(serverStyleFilePath);
+        if (!destPath.exists()) {
+            destPath.mkdir();
+        }
+        File[] srcFileList = srcPath.listFiles();
+        try {
+            assert srcFileList != null;
+            for (File file : srcFileList) {
+                FileUtil.copyFolder(file, destPath);
+            }
+        } catch (Exception e) {
+            throw new OceanException(20001, "样式文件复制出现异常");
         }
     }
 
@@ -137,7 +159,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         long start = System.nanoTime();
         String sldPath = serverStyleFilePath + "wind_style.sld";
         String ncpath = serverTempFilePath;
-        String ncurl = "file:/" + serverTempFilePath;
+        String ncurl = "file://" + serverTempFilePath;
         String jsonFilePath = serverFilePropertyPath + "ww.json";
 
         String username = geoServerProperties.getUsername();
@@ -257,7 +279,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         // viewname 图层名称
         // workspace 工作空间名称
         // String jsonFilePath = "D:\\work\\ocean_project\\json\\ww.json";//模板文件
-        log.info("配置u,v Coverage View");
+        log.info("Configure u,v Coverage View");
         String geoServerUrl = geoServerProperties.getUrl();
         File file = new File(jsonFilePath);
         String input = FileUtils.readFileToString(file, "UTF-8");
@@ -309,7 +331,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         out.write((obj.toString()).getBytes("UTF-8"));
         out.flush();
         out.close();
-        System.out.println(connection.getResponseCode());
+        System.out.println("createView ResponseCode: " + connection.getResponseCode());
     }
 
     public String loadJson(String url, String username, String password) throws IOException {

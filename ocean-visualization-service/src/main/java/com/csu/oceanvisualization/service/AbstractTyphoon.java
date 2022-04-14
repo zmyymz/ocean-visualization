@@ -12,6 +12,9 @@ public abstract class AbstractTyphoon {
         // 1.文件目录处理
         traverseFile();
 
+        // 复制样式文件
+        copyStyleFiles();
+
         // 2.统计每个WP文件夹下的txt数量
         countTyphoonSeq();
 
@@ -20,6 +23,8 @@ public abstract class AbstractTyphoon {
 
     }
     protected abstract void traverseFile();
+
+    protected abstract void copyStyleFiles();
 
     protected abstract void countTyphoonSeq();
 

@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 public class GDALUtils {
     // swh.nc -> .tif
     public static void gdalTranslate(String inputFilePath, String outputFilePath) throws IOException {
+        System.setProperty("user.timezone", "GMT+08");
         // 1° 设置原始文件路径+转存文件路径
         String filePath = inputFilePath;
 
