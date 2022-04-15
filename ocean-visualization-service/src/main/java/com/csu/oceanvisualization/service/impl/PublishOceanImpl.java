@@ -88,13 +88,13 @@ public class PublishOceanImpl extends AbstractOcean {
         log.info("开始复制海洋数据");
         File src = new File(userFilePath);
         File dest = new File(serverTempFilePath);
-        System.out.println(userFilePath);
+        // System.out.println(userFilePath);
         if (!dest.exists()) {
             dest.mkdir();
         }
         // 获取源路径下所有文件
         File[] srcFileList = src.listFiles();
-        System.out.println(srcFileList.length);
+        // System.out.println(srcFileList.length);
         try {
             //遍历每一个文件
             assert srcFileList != null;

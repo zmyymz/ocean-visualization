@@ -220,9 +220,11 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         List<String> workspaces = manager.getReader().getWorkspaceNames();
         if (!workspaces.contains(workSpace)) {
             boolean createws = publisher.createWorkspace(workSpace);
-            System.out.println("create ws : " + createws);
+            System.out.println("create workspace : " + createws);
+            log.info("create workspace : " + createws);
         } else {
-            System.out.println("workspace已经存在了,workSpace :" + workSpace);
+            System.out.println("workspace已经存在了, workSpace :" + workSpace);
+            log.info("workspace already exists, workSpace :" + workSpace);
         }
     }
 
@@ -279,7 +281,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         // viewname 图层名称
         // workspace 工作空间名称
         // String jsonFilePath = "D:\\work\\ocean_project\\json\\ww.json";//模板文件
-        log.info("Configure u,v Coverage View");
+        log.info("Configure u,v Coverage View : createView");
         String geoServerUrl = geoServerProperties.getUrl();
         File file = new File(jsonFilePath);
         String input = FileUtils.readFileToString(file, "UTF-8");
@@ -332,6 +334,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         out.flush();
         out.close();
         System.out.println("createView ResponseCode: " + connection.getResponseCode());
+        log.info("createView ResponseCode: " + connection.getResponseCode());
     }
 
     public String loadJson(String url, String username, String password) throws IOException {
@@ -366,6 +369,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
             boolean b1 = styleManager.publishStyleInWorkspace(workSpace, sldFile, sldName);
             if (!b1) {
                 System.out.println("新增样式失败");
+                log.warn("Adding style failed");
             }
         }
     }
@@ -376,7 +380,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         log.info("addStyleForView");
         String geoServerUrl = geoServerProperties.getUrl();
         String json = loadJson(url1, username, password);
-        System.out.println(json);
+        // System.out.println(json);
         JSONObject obj = JSONObject.fromString(json);
         String layerString = (String) obj.optString("layer");
         JSONObject layerObj = JSONObject.fromString(layerString);
@@ -403,6 +407,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         out.flush();
         out.close();
         System.out.println(connection.getResponseCode());
+        log.info("addStyleForView ResponseCode: " + connection.getResponseCode());
     }
 
 
