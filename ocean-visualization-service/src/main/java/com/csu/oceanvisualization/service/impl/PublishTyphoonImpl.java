@@ -60,6 +60,8 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     @Override
     protected void traverseFile() {
         log.info("开始复制台风文件");
+        log.info("Start copy typhoon data");
+        System.out.println("开始复制台风文件");
         // 递归将userFilePath下的文件复制到serverTempFilePath
         File srcPath = new File(userFilePath);
 
@@ -71,8 +73,10 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
 
         //获取源路径下所有文件
         File[] srcFileList = srcPath.listFiles();
+        System.out.println(srcFileList);
         //遍历每一个文件
         for (File file : srcFileList) {
+            System.out.println(file.getName());
             // 获取每一个文件的路径
             // System.out.println(file.getCanonicalPath());
             // File newDestPath = new File(destPath,file.getName());
@@ -89,6 +93,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     @Override
     protected void copyStyleFiles() {
         log.info("开始复制样式文件");
+        log.info("Start copy style file");
         File srcPath = new File(userStyleFilePath);
         File destPath = new File(serverStyleFilePath);
         if (!destPath.exists()) {
@@ -108,6 +113,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     @Override
     protected void countTyphoonSeq() {
         log.info("开始计算台风元数据");
+        log.info("Start get Typhoon Metadata");
         // 依次统计WP,NA,EP下的txt数量
         ConcurrentHashMap<String, List<String>> map = new ConcurrentHashMap<>();
         File typhoonFolder = new File(serverTempFilePath);
@@ -268,7 +274,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
             out.write((json.toString()).getBytes("UTF-8"));
             out.flush();
             out.close();
-            System.out.println(connection.getResponseCode());
+            System.out.println("uploadNcData ResponseCode: " + connection.getResponseCode());
         } catch (IOException e) {
             // e.printStackTrace();
             throw new OceanException(20001, "uploadNcData: Network Error");
@@ -366,6 +372,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         boolean b = styleManager.existsStyle(workSpace, sldName);
         if (!b) {
             File sldFile = new File(sldPath);
+            System.out.println("addStyle: " + sldPath);
             boolean b1 = styleManager.publishStyleInWorkspace(workSpace, sldFile, sldName);
             if (!b1) {
                 System.out.println("新增样式失败");
@@ -406,7 +413,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         out.write((obj.toString()).getBytes("UTF-8"));
         out.flush();
         out.close();
-        System.out.println(connection.getResponseCode());
+        System.out.println("addStyleForView ResponseCode: " + connection.getResponseCode());
         log.info("addStyleForView ResponseCode: " + connection.getResponseCode());
     }
 

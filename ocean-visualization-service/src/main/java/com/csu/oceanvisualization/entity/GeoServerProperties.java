@@ -18,4 +18,5 @@ public class GeoServerProperties {
     private String username;
     private String password;
     private String workspace;
+    private String typhoonWorkSpace;
 }

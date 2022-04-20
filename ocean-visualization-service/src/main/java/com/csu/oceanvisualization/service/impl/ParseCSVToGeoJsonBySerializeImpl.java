@@ -31,6 +31,7 @@ public class ParseCSVToGeoJsonBySerializeImpl implements ParseCSVToGeoJson {
     @Override
     public String parse(String fourOceans, String tpSeq) {
         System.out.println("执行解析GeoJsonParseCSVToGeoJson#parse");
+        System.out.println(fourOceans + "  " + tpSeq);
         String csvFilePath = FilenameUtils.separatorsToSystem(serverTempFilePath + fourOceans.toUpperCase() + "_solo/" + tpSeq.trim() + ".txt");
         System.out.println(csvFilePath);
         // String csvFilePath = "D:\\OceanVisualization\\data\\typhoon_data\\WP_solo\\" + tpSeq.trim() + ".txt";

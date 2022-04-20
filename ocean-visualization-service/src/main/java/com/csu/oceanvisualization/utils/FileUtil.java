@@ -119,6 +119,13 @@ public class FileUtil {
                     //进行递归调用
                     copyFolder(file, newDestPath);
                 }
+            }else{
+                //获取源路径下所有的目录及文件
+                File[] allPathList = srcPath.listFiles();
+                for (File file : allPathList) {
+                    //进行递归调用
+                    copyFolder(file, newDestPath);
+                }
             }
         }
         //若是文件则直接拷贝
@@ -127,6 +134,7 @@ public class FileUtil {
             FileUtil.copyFile(srcPath, newDestPath);
         }
     }
+
     /**
      * 拷贝文件
      *
