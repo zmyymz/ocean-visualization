@@ -62,14 +62,20 @@ public class PublishOceanImpl extends AbstractOcean {
     @Autowired
     private GeoServerProperties geoServerProperties;
 
+    @Value("${com.csu.ocean.need-gdal-translate}")
+    private boolean NEED_GDAL_TRANSLATE;
+
+    @Value("${com.csu.ocean.need-calculate-error}")
+    private boolean NEED_CALCULATE_ERROR;
+
     @Override
     protected boolean needGdalTranslate() {
-        return true;
+        return NEED_GDAL_TRANSLATE;
     }
 
     @Override
     protected boolean needCalculateError() {
-        return true;
+        return NEED_CALCULATE_ERROR;
     }
 
     @Override
