@@ -91,7 +91,7 @@ public class PublishOceanImpl extends AbstractOcean {
         // 4. 如果有则删除serverTempFilePath下的文件, 不再复制, 只复制新文件
 
         // 1. 遍历userFilePath目录, 获取所有nc路径
-        log.info("开始复制海洋数据");
+        log.info("PublishOceanImpl>>traverseFile() start copy ocean data");
         File src = new File(userFilePath);
         File dest = new File(serverTempFilePath);
         // System.out.println(userFilePath);
@@ -115,14 +115,14 @@ public class PublishOceanImpl extends AbstractOcean {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("PublishOceanImpl>>traverseFile() error: ", e);
             throw new OceanException(20001, "复制海洋数据出现异常");
         }
     }
 
     @Override
     protected void copyStyleFiles() {
-        log.info("开始复制样式文件");
+        log.info("PublishOceanImpl>>copyStyleFiles() start copy style files");
         File srcPath = new File(userStyleFilePath);
         File destPath = new File(serverStyleFilePath);
         if (!destPath.exists()) {
@@ -135,6 +135,7 @@ public class PublishOceanImpl extends AbstractOcean {
                 FileUtil.copyFolder(file, destPath);
             }
         } catch (Exception e) {
+            log.error("PublishOceanImpl>>copyStyleFiles() error: ", e);
             throw new OceanException(20001, "样式文件复制出现异常");
         }
     }
@@ -142,7 +143,7 @@ public class PublishOceanImpl extends AbstractOcean {
     @SneakyThrows
     @Override
     protected void calculateError() {
-        log.info("正在为数据添加两个变量");
+        log.info("PublishOceanImpl>>calculateError: start add two variables");
         // 只获取当前目录下的nc文件, 然后依次添加新的变量
         List<File> files = Files.list(Paths.get(serverTempFilePath))
                 .filter(Files::isRegularFile)
@@ -158,13 +159,13 @@ public class PublishOceanImpl extends AbstractOcean {
             if (property.toLowerCase().startsWith("win")) {
                 String commandStr = "cmd /c python " + scriptPathPath + " " + file;
                 CMDUtils.executeCMD(commandStr);
-                log.info("执行添加变量脚本: " + commandStr);
+                log.info("PublishOceanImpl>>calculateError CMDUtils.executeCMD: " + commandStr);
                 // System.out.println(commandStr);
             } else {
                 // 执行 linux cmd
                 String commandStr = "python " + scriptPathPath + " " + file;
                 CMDUtils.executeCMD(commandStr);
-                log.info("执行添加变量脚本: " + commandStr);
+                log.info("PublishOceanImpl>>calculateError CMDUtils.executeCMD: " + commandStr);
             }
         });
     }
@@ -173,7 +174,7 @@ public class PublishOceanImpl extends AbstractOcean {
     protected void gdalTranslate() {
         // 遍历serverFilePath目录下的所有文件, 依次执行gdal_translate命令
         log.info("开始将nc转为tif");
-        log.info("Start nc -> tif");
+        log.info("PublishOceanImpl>>gdalTranslate Start nc -> tif");
         File ncFolder = new File(serverTempFilePath);
         File[] ncFilePath = ncFolder.listFiles();
         String property = System.getProperties().getProperty("os.name");
@@ -185,7 +186,8 @@ public class PublishOceanImpl extends AbstractOcean {
                         try {
                             GDALUtils.gdalTranslate(FilenameUtils.separatorsToSystem(file.getAbsolutePath()), serverTifFilePath);
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            log.error("PublishOceanImpl>>gdalTranslate error: ", e);
+                            throw new OceanException(20001, "GDALUtils.gdalTranslate异常");
                         }
                     }
                 }
@@ -201,7 +203,7 @@ public class PublishOceanImpl extends AbstractOcean {
         // String tifpath = "D:\\work\\ocean_project\\Ocean\\user_ocean_data";//文件路径
         // String sldPath = "D:\\work\\ocean_project\\data\\datasld";
         log.info("开始发布tif图层");
-        log.info("Start publish tif layer");
+        log.info("PublishOceanImpl>>publishTifLayer Start publish tif layer");
         String tifpath = serverTifFilePath;
         String sldPath = serverStyleFilePath;
         String url = geoServerProperties.getUrl();
@@ -211,7 +213,7 @@ public class PublishOceanImpl extends AbstractOcean {
         try {
             createWorkspace(url, username, password, workSpace);
         } catch (MalformedURLException e) {
-            e.printStackTrace();
+            log.error("PublishOceanImpl>>publishTifLayer error", e);
             throw new OceanException(20001, "Geoserver创建工作空间异常");
         }
         String[] tifArray = FileUtil.getFileName(tifpath);//所有tif文件
@@ -261,7 +263,7 @@ public class PublishOceanImpl extends AbstractOcean {
                     String dataStore = tifName[0];
                     String layerStore = tifName[0];
                     log.info("发布带有样式的tif图层");
-                    log.info("Start publish tif layer with style");
+                    log.info("PublishOceanImpl>>publishTifLayer Start publish tif layer with style");
                     PublishSldTiffData(url, username, password, workSpace, sldpath, sldName, tiffpath, dataStore, layerStore);
                 }
             });
@@ -270,7 +272,7 @@ public class PublishOceanImpl extends AbstractOcean {
         while (!executor.isTerminated()) {
         }
         long end = System.nanoTime();
-        log.info("Finished all threads, 共耗时: " + String.valueOf(end - start) + "ns");
+        log.info("PublishOceanImpl>>publishTifLayer Finished all threads, cost: " + String.valueOf(end - start) + "ns");
     }
 
     /**
@@ -300,21 +302,21 @@ public class PublishOceanImpl extends AbstractOcean {
                 gsGeoTIFFDatastoreEncoder.setUrl(new URL("file:" + tiffPath));
                 boolean createStore = manager.getStoreManager().create(workSpace, gsGeoTIFFDatastoreEncoder);
                 if (!createStore) {
-                    log.info("create store (TIFF文件创建状态) : " + createStore);
+                    log.info("PublishOceanImpl>>PublishSldTiffData create store (TIFF文件创建状态) : " + createStore);
                     // System.out.println("create store (TIFF文件创建状态) : " + createStore);
                 }
                 boolean publish = publisher.publishGeoTIFF(workSpace, dataStore, layerStore, new File(tiffPath), "EPSG:4326",
                         GSResourceEncoder.ProjectionPolicy.FORCE_DECLARED, sldName, null);
                 if (!publish) {
-                    log.info("publish (TIFF文件发布状态) : " + publish);
+                    log.info("PublishOceanImpl>>PublishSldTiffData publish (TIFF文件发布状态) : " + publish);
                     // System.out.println("publish (TIFF文件发布状态) : " + publish);
                 }
             } else {
-                log.info("数据存储已经存在了,store:" + dataStore);
+                log.info("PublishOceanImpl>>PublishSldTiffData dataStore already exists, store:" + dataStore);
                 // System.out.println("数据存储已经存在了,store:" + dataStore);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("PublishOceanImpl>>PublishSldTiffData error: ", e);
             throw new OceanException(20001, "PublishSldTiffData: Network Error");
         }
     }
@@ -337,10 +339,10 @@ public class PublishOceanImpl extends AbstractOcean {
         if (workspaces.contains(workSpace)) {
             // 删除工作空间
             publisher.removeWorkspace(workSpace, true);
-            log.info("workspace已经存在了删除, workSpace :" + workSpace);
+            log.info("PublishOceanImpl>>createWorkspace workspace already exists, delete workSpace :" + workSpace);
         }
         boolean createws = publisher.createWorkspace(workSpace);
-        log.info("create ws : " + createws);
+        log.info("PublishOceanImpl>>createWorkspace create workSpace : " + createws);
 
         // URL u = new URL(url);
         // GeoServerRESTManager manager = new GeoServerRESTManager(u, username, password);
@@ -374,7 +376,7 @@ public class PublishOceanImpl extends AbstractOcean {
             File sldFile = new File(sldPath);
             boolean b1 = styleManager.publishStyleInWorkspace(workSpace, sldFile, sldName);
             if (!b1) {
-                log.warn("新增样式失败");
+                log.warn("PublishOceanImpl>>addStyle addStyle failed");
                 // System.out.println("新增样式失败");
                 // throw new OceanException(20001, "新增样式失败");
             }
@@ -416,7 +418,8 @@ public class PublishOceanImpl extends AbstractOcean {
             }
             br.close();
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("PublishOceanImpl>>check md5 error: ", e);
+            throw new OceanException(20001, "存在md5值相同的文件");
         }
         // 3. 如果没有就将所有nc文件复制到 serverTempFilePath,
         //计算文件md5, 写入文件/geoserver/property/ncfilemd5
@@ -439,7 +442,8 @@ public class PublishOceanImpl extends AbstractOcean {
             fwriter.write(md5);
             fwriter.write("\r\n");
         } catch (IOException ex) {
-            ex.printStackTrace();
+            // ex.printStackTrace();
+            log.error("PublishOceanImpl>>writeMd5 error: ", ex);
         } finally {
             try {
                 fwriter.flush();

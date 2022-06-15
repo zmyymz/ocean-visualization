@@ -7,6 +7,7 @@ import com.csu.oceanvisualization.entity.TyphoonProperty;
 import com.csu.oceanvisualization.service.ParseCSVToGeoJson;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -22,6 +23,7 @@ import java.util.Arrays;
  * @Package com.csu.oceanvisualization.service.impl
  * @date 2022/2/23 19:51
  */
+@Slf4j
 @Service("parseBySerialize")
 public class ParseCSVToGeoJsonBySerializeImpl implements ParseCSVToGeoJson {
     @Value("${com.csu.typhoon.serverfile-path}")
@@ -30,6 +32,7 @@ public class ParseCSVToGeoJsonBySerializeImpl implements ParseCSVToGeoJson {
     @SneakyThrows
     @Override
     public String parse(String fourOceans, String tpSeq) {
+        log.info("ParseCSVToGeoJsonBySerializeImpl>>parse start ", fourOceans + " " + tpSeq);
         System.out.println("执行解析GeoJsonParseCSVToGeoJson#parse");
         System.out.println(fourOceans + "  " + tpSeq);
         String csvFilePath = FilenameUtils.separatorsToSystem(serverTempFilePath + fourOceans.toUpperCase() + "_solo/" + tpSeq.trim() + ".txt");

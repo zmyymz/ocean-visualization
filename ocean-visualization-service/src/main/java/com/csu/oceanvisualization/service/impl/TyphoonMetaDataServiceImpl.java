@@ -3,6 +3,7 @@ package com.csu.oceanvisualization.service.impl;
 import com.csu.oceanvisualization.service.TyphoonMetaDataService;
 import com.csu.oceanvisualization.servicebase.exceptionhandler.OceanException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @Package com.csu.oceanvisualization.service
  * @date 2022/3/5 14:51
  */
+@Slf4j
 @Service
 public class TyphoonMetaDataServiceImpl implements TyphoonMetaDataService {
     @Value("${com.csu.typhoon.file-property-path}")
@@ -32,7 +34,8 @@ public class TyphoonMetaDataServiceImpl implements TyphoonMetaDataService {
             String metaDataJsonPath = serverFilePropertyPath + "/typhoonMetaData.json";
             concurrentHashMap = objectMapper.readValue(new File(FilenameUtils.separatorsToSystem(metaDataJsonPath)), ConcurrentHashMap.class);
         } catch (IOException e) {
-            e.printStackTrace();
+            // e.printStackTrace();
+            log.error("TyphoonMetaDataServiceImpl>>getTyphoonMetaData error: ", e);
             throw new OceanException(20001, "获取台风元数据失败");
         }
         // System.out.println(concurrentHashMap);

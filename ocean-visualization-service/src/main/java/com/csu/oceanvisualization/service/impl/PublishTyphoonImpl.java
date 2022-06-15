@@ -60,7 +60,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     @Override
     protected void traverseFile() {
         log.info("开始复制台风文件");
-        log.info("Start copy typhoon data");
+        log.info("PublishTyphoonImpl>>traverseFile Start copy typhoon data");
         System.out.println("开始复制台风文件");
         // 递归将userFilePath下的文件复制到serverTempFilePath
         File srcPath = new File(userFilePath);
@@ -85,6 +85,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
                 // int a = 10 / 0;
             } catch (Exception e) {
                 // e.printStackTrace();
+                log.error("PublishTyphoonImpl>>traverseFile error: ", e);
                 throw new OceanException(20001, "台风数据复制出现异常");
             }
         }
@@ -93,7 +94,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     @Override
     protected void copyStyleFiles() {
         log.info("开始复制样式文件");
-        log.info("Start copy style file");
+        log.info("PublishTyphoonImpl>>copyStyleFiles start copy style files");
         File srcPath = new File(userStyleFilePath);
         File destPath = new File(serverStyleFilePath);
         if (!destPath.exists()) {
@@ -106,6 +107,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
                 FileUtil.copyFolder(file, destPath);
             }
         } catch (Exception e) {
+            log.error("PublishTyphoonImpl>>copyStyleFiles error: ", e);
             throw new OceanException(20001, "样式文件复制出现异常");
         }
     }
@@ -113,7 +115,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     @Override
     protected void countTyphoonSeq() {
         log.info("开始计算台风元数据");
-        log.info("Start get Typhoon Metadata");
+        log.info("PublishTyphoonImpl>>countTyphoonSeq Start get Typhoon Metadata");
         // 依次统计WP,NA,EP下的txt数量
         ConcurrentHashMap<String, List<String>> map = new ConcurrentHashMap<>();
         File typhoonFolder = new File(serverTempFilePath);
@@ -138,14 +140,16 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(file, map);
             } catch (IOException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
+                log.error("PublishTyphoonImpl>>countTyphoonSeq error:", e);
             }
         } else {
             try {
                 ObjectMapper mapper = new ObjectMapper();
                 mapper.writeValue(file, map);
             } catch (IOException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
+                log.error("PublishTyphoonImpl>>countTyphoonSeq error: ",e);
             }
         }
     }
@@ -161,7 +165,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         // String jsonFilePath = "D:\\work\\ocean_project\\json\\ww.json";
 
         log.info("开始发布台风图层");
-        log.info("Start publish typhoon layer");
+        log.info("PublishTyphoonImpl>>publishTifLayer Start publish typhoon layer");
         long start = System.nanoTime();
         String sldPath = serverStyleFilePath + "wind_style.sld";
         String ncpath = serverTempFilePath;
@@ -212,9 +216,9 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
             }
         }
         log.info("发布台风图层完成");
-        log.info("Finish publish typhoon layer");
+        log.info("PublishTyphoonImpl>>publishTifLayer Finish publish typhoon layer");
         long end = System.nanoTime();
-        log.info("Finished all threads, 共耗时: " + String.valueOf(end - start) + "ns");
+        log.info("PublishTyphoonImpl>>publishTifLayer Finished all threads, cost: " + String.valueOf(end - start) + "ns");
     }
 
 
@@ -227,10 +231,10 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         if (!workspaces.contains(workSpace)) {
             boolean createws = publisher.createWorkspace(workSpace);
             System.out.println("create workspace : " + createws);
-            log.info("create workspace : " + createws);
+            log.info("PublishTyphoonImpl>>createWorkspace create workspace : " + createws);
         } else {
             System.out.println("workspace已经存在了, workSpace :" + workSpace);
-            log.info("workspace already exists, workSpace :" + workSpace);
+            log.info("PublishTyphoonImpl>>createWorkspace workspace already exists, workSpace :" + workSpace);
         }
     }
 
@@ -241,7 +245,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         // "http://localhost:8089/geoserver/rest/workspaces/cite/coveragestores
         // String urlg = "http://localhost:8089/geoserver";
         // createWorkspace(urlg,username,password,workspace);
-        log.info("Start uploadNcData by http");
+        log.info("PublishTyphoonImpl>>uploadNcData Start uploadNcData by http");
         Map<String, Object> map = new HashMap<String, Object>();
         Map<String, Object> map1 = new HashMap<String, Object>();
         Map<String, Object> map2 = new HashMap<String, Object>();
@@ -277,6 +281,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
             System.out.println("uploadNcData ResponseCode: " + connection.getResponseCode());
         } catch (IOException e) {
             // e.printStackTrace();
+            log.error("PublishTyphoonImpl>>uploadNcData error", e);
             throw new OceanException(20001, "uploadNcData: Network Error");
         }
 
@@ -287,7 +292,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         // viewname 图层名称
         // workspace 工作空间名称
         // String jsonFilePath = "D:\\work\\ocean_project\\json\\ww.json";//模板文件
-        log.info("Configure u,v Coverage View : createView");
+        log.info("PublishTyphoonImpl>>createView Configure u,v Coverage View : createView");
         String geoServerUrl = geoServerProperties.getUrl();
         File file = new File(jsonFilePath);
         String input = FileUtils.readFileToString(file, "UTF-8");
@@ -339,12 +344,12 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         out.write((obj.toString()).getBytes("UTF-8"));
         out.flush();
         out.close();
-        System.out.println("createView ResponseCode: " + connection.getResponseCode());
+        System.out.println("PublishTyphoonImpl>>createView createView ResponseCode: " + connection.getResponseCode());
         log.info("createView ResponseCode: " + connection.getResponseCode());
     }
 
     public String loadJson(String url, String username, String password) throws IOException {
-        log.info("loadJson");
+        log.info("PublishTyphoonImpl>>loadJson start");
         StringBuilder json = new StringBuilder();
         URL urlObj = new URL(url);
         HttpURLConnection connection = (HttpURLConnection) urlObj.openConnection();
@@ -365,7 +370,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
 
     public void addStyle(String sldName, String sldPath, String username, String password, String workSpace) throws MalformedURLException {
         log.info("为台风添加样式");
-        log.info("addStyle for typhoon");
+        log.info("PublishTyphoonImpl>>addStyle addStyle for typhoon");
         URL u = new URL(geoServerProperties.getUrl());
         GeoServerRESTManager manager = new GeoServerRESTManager(u, username, password);
         GeoServerRESTStyleManager styleManager = manager.getStyleManager();
@@ -376,7 +381,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
             boolean b1 = styleManager.publishStyleInWorkspace(workSpace, sldFile, sldName);
             if (!b1) {
                 System.out.println("新增样式失败");
-                log.warn("Adding style failed");
+                log.warn("PublishTyphoonImpl>>addStyle Adding style failed");
             }
         }
     }
@@ -384,7 +389,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
     public void addStyleForView(String url1, String url2, String workspace, String username, String password, String sldName) throws IOException {
         // String url ="http://localhost:8089/geoserver/rest/layers/netcdfView.json";
         // String url2 = "http://localhost:8089/geoserver/rest/layers/netcdfView";
-        log.info("addStyleForView");
+        log.info("PublishTyphoonImpl>>addStyleForView start");
         String geoServerUrl = geoServerProperties.getUrl();
         String json = loadJson(url1, username, password);
         // System.out.println(json);
@@ -414,7 +419,7 @@ public class PublishTyphoonImpl extends AbstractTyphoon {
         out.flush();
         out.close();
         System.out.println("addStyleForView ResponseCode: " + connection.getResponseCode());
-        log.info("addStyleForView ResponseCode: " + connection.getResponseCode());
+        log.info("PublishTyphoonImpl>>addStyleForView ResponseCode: " + connection.getResponseCode());
     }
 
 
